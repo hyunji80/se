@@ -5,18 +5,18 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * SE 종합물산 — 신세계 백화점 럭셔리 레지스터
- * Warm ivory paper, near-black ink, restrained brass accent.
+ * SE 종합물산 — 신세계백화점 레지스터
+ * Pure white paper, hairline rules, black ink, single red point.
  */
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-4xl: 0px;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -34,66 +34,63 @@
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
+  --color-hairline: var(--hairline);
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-ring-offset-background: var(--background);
-  --color-gold: var(--gold);
-  --color-gold-soft: var(--gold-soft);
-  --color-cream: var(--cream);
-  --color-cream-deep: var(--cream-deep);
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
 }
 
 :root {
-  --radius: 0.5rem;
-  --background: oklch(0.975 0.012 90);          /* warm ivory */
-  --foreground: oklch(0.22 0.01 70);            /* warm near-black */
-  --card: oklch(0.99 0.008 90);
-  --card-foreground: oklch(0.22 0.01 70);
-  --popover: oklch(0.99 0.008 90);
-  --popover-foreground: oklch(0.22 0.01 70);
-  --primary: oklch(0.22 0.01 70);               /* charcoal */
-  --primary-foreground: oklch(0.975 0.012 90);
-  --secondary: oklch(0.94 0.015 85);
-  --secondary-foreground: oklch(0.22 0.01 70);
-  --muted: oklch(0.94 0.015 85);
-  --muted-foreground: oklch(0.5 0.015 75);
-  --accent: oklch(0.72 0.09 75);                /* brass */
-  --accent-foreground: oklch(0.22 0.01 70);
+  --radius: 0rem;
+  --background: oklch(1 0 0);                   /* pure white */
+  --foreground: oklch(0.16 0 0);                /* near-black ink */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.16 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.16 0 0);
+  --primary: oklch(0.16 0 0);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.968 0 0);
+  --secondary-foreground: oklch(0.16 0 0);
+  --muted: oklch(0.968 0 0);
+  --muted-foreground: oklch(0.53 0 0);
+  --accent: oklch(0.5 0.21 27);                 /* shinsegae red */
+  --accent-foreground: oklch(1 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.975 0.012 90);
-  --border: oklch(0.89 0.015 85);
-  --input: oklch(0.89 0.015 85);
-  --ring: oklch(0.72 0.09 75);
-  --gold: oklch(0.72 0.09 75);
-  --gold-soft: oklch(0.88 0.04 85);
-  --cream: oklch(0.955 0.02 88);
-  --cream-deep: oklch(0.92 0.025 85);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.9 0 0);
+  --hairline: oklch(0.86 0 0);
+  --input: oklch(0.9 0 0);
+  --ring: oklch(0.16 0 0);
+  --paper: oklch(0.972 0 0);
+  --ink: oklch(0.16 0 0);
 }
 
 .dark {
-  --background: oklch(0.22 0.01 70);
-  --foreground: oklch(0.975 0.012 90);
-  --card: oklch(0.27 0.012 70);
-  --card-foreground: oklch(0.975 0.012 90);
-  --popover: oklch(0.27 0.012 70);
-  --popover-foreground: oklch(0.975 0.012 90);
-  --primary: oklch(0.975 0.012 90);
-  --primary-foreground: oklch(0.22 0.01 70);
-  --secondary: oklch(0.3 0.012 70);
-  --secondary-foreground: oklch(0.975 0.012 90);
-  --muted: oklch(0.3 0.012 70);
-  --muted-foreground: oklch(0.68 0.02 80);
-  --accent: oklch(0.72 0.09 75);
-  --accent-foreground: oklch(0.22 0.01 70);
+  --background: oklch(0.14 0 0);
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.17 0 0);
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.17 0 0);
+  --popover-foreground: oklch(0.98 0 0);
+  --primary: oklch(0.98 0 0);
+  --primary-foreground: oklch(0.14 0 0);
+  --secondary: oklch(0.22 0 0);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.22 0 0);
+  --muted-foreground: oklch(0.68 0 0);
+  --accent: oklch(0.58 0.2 27);
+  --accent-foreground: oklch(1 0 0);
   --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.975 0.012 90);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.72 0.09 75);
-  --gold: oklch(0.72 0.09 75);
-  --gold-soft: oklch(0.4 0.04 80);
-  --cream: oklch(0.27 0.012 70);
-  --cream-deep: oklch(0.24 0.012 70);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(1 0 0 / 14%);
+  --hairline: oklch(1 0 0 / 18%);
+  --input: oklch(1 0 0 / 16%);
+  --ring: oklch(0.98 0 0);
+  --paper: oklch(0.18 0 0);
+  --ink: oklch(0.98 0 0);
 }
 
 @layer base {
@@ -108,7 +105,8 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-family: "Inter", "Noto Sans KR", sans-serif;
+    font-family: "Noto Sans KR", "Inter", sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
 }
 
@@ -117,31 +115,50 @@
     font-family: "Noto Serif KR", serif;
   }
 
-  .glass-card {
-    background: color-mix(in oklab, var(--card) 72%, transparent);
-    backdrop-filter: blur(24px) saturate(130%);
-    border: 1px solid color-mix(in oklab, var(--card) 65%, transparent);
-    box-shadow: 0 24px 60px -34px color-mix(in oklab, var(--foreground) 28%, transparent);
+  .tracking-label {
+    letter-spacing: 0.32em;
   }
 
-  .shadow-luxe {
-    box-shadow: 0 30px 70px -38px color-mix(in oklab, var(--foreground) 30%, transparent);
+  .hairline-t {
+    border-top: 1px solid var(--hairline);
   }
 
-  .card-hover {
-    transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+  .hairline-b {
+    border-bottom: 1px solid var(--hairline);
   }
 
-  .card-hover:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 36px 80px -36px color-mix(in oklab, var(--foreground) 35%, transparent);
+  .link-underline {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0% 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .link-underline:hover {
+    background-size: 100% 1px;
   }
 
   .image-zoom img {
-    transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+    transition: transform 1.1s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
 
   .image-zoom:hover img {
-    transform: scale(1.04);
+    transform: scale(1.05);
+  }
+
+  .fade-up {
+    animation: fade-up 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
   }
 }
