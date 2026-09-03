@@ -21,16 +21,16 @@ import pGloves from "@/assets/p-gloves.jpg";
 import pTape from "@/assets/p-tape.jpg";
 import pTowel from "@/assets/p-towel.jpg";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/shop")({
   head: () => ({
     meta: [
-      { title: "SE 종합물산 — 필요한 모든 소모품, 한 곳에서" },
+      { title: "전체 상품 — SE 종합물산" },
       {
         name: "description",
         content:
           "전기자재부터 위생·청소, 사무·포장까지. SE 종합물산이 일상의 모든 소모품을 백화점의 품격으로 큐레이션합니다. 당일 출고 · 대량구매 견적.",
       },
-      { property: "og:title", content: "SE 종합물산 — 필요한 모든 소모품, 한 곳에서" },
+      { property: "og:title", content: "전체 상품 — SE 종합물산" },
       {
         property: "og:description",
         content:
