@@ -11,7 +11,7 @@ import {
   Building2,
 } from "lucide-react";
 
-import heroImage from "@/assets/hero-consumables.jpg";
+import heroImage from "@/assets/hero-space-shop.jpg";
 import catElectric from "@/assets/cat-electric.jpg";
 import catHygiene from "@/assets/cat-hygiene.jpg";
 import catOffice from "@/assets/cat-office.jpg";
@@ -192,28 +192,28 @@ function Index() {
       <main>
         {/* Hero — full bleed editorial */}
         <section className="relative">
-          <div className="image-zoom relative h-[68vh] min-h-[520px] w-full overflow-hidden">
+          <div className="image-zoom relative h-[72vh] min-h-[560px] w-full overflow-hidden">
             <img
               src={heroImage}
-              alt="아이보리 스톤 위에 놓인 화이트 스위치와 위생 장갑, 페이퍼 롤"
+              alt="따뜻한 조명 아래 정돈되어 채워진 어두운 실내 공간의 선반"
               width={1920}
               height={1080}
               className="h-full w-full object-cover"
             />
-            <div className="absolute inset-0 bg-ink/35" />
+            <div className="absolute inset-0 bg-ink/55" />
             <div className="absolute inset-0 flex items-center justify-center px-6">
               <div className="fade-up max-w-3xl text-center text-background">
-                <p className="text-[10px] font-semibold uppercase tracking-label">
-                  2026 New Arrivals
+                <p className="text-[10px] font-semibold uppercase tracking-label text-background/70">
+                  The Filled Space
                 </p>
                 <h1 className="font-display mt-6 text-3xl font-bold leading-[1.35] tracking-tight sm:text-5xl">
-                  매일의 필요를
+                  공간을 채우는
                   <br />
-                  정돈하는 상점
+                  모든 것
                 </h1>
                 <p className="mx-auto mt-6 max-w-lg text-sm leading-relaxed text-background/80">
                   스위치와 콘센트부터 위생 장갑, 청소·사무·포장 용품까지.
-                  일상의 모든 소모품을 한 곳에서.
+                  비어 있는 자리를 채우는 일상의 모든 소모품.
                 </p>
                 <div className="mt-10 flex items-center justify-center gap-4">
                   <a
