@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import {
   Search,
   Heart,
@@ -11,15 +12,14 @@ import {
   Building2,
 } from "lucide-react";
 
-import heroImage from "@/assets/hero-consumables.jpg";
+import { InquiryDialog } from "@/components/inquiry-dialog";
+import { supabase, type Product } from "@/lib/supabase";
+
+import heroImage from "@/assets/hero-space-shop.jpg";
 import catElectric from "@/assets/cat-electric.jpg";
 import catHygiene from "@/assets/cat-hygiene.jpg";
 import catOffice from "@/assets/cat-office.jpg";
 import catDaily from "@/assets/cat-daily.jpg";
-import pOutlet from "@/assets/p-outlet.jpg";
-import pGloves from "@/assets/p-gloves.jpg";
-import pTape from "@/assets/p-tape.jpg";
-import pTowel from "@/assets/p-towel.jpg";
 
 export const Route = createFileRoute("/shop")({
   head: () => ({
@@ -50,7 +50,6 @@ const categories = [
     no: "01",
     name: "전기자재",
     desc: "스위치 · 콘센트 · 전선",
-    count: "86 품목",
     image: catElectric,
     alt: "화이트 스위치와 콘센트 제품",
   },
@@ -58,7 +57,6 @@ const categories = [
     no: "02",
     name: "위생·청소",
     desc: "장갑 · 세정제 · 소모품",
-    count: "142 품목",
     image: catHygiene,
     alt: "위생 장갑과 세정 스프레이",
   },
@@ -66,7 +64,6 @@ const categories = [
     no: "03",
     name: "사무·포장",
     desc: "박스 · 테이프 · 사무용품",
-    count: "98 품목",
     image: catOffice,
     alt: "크라프트 박스와 포장 테이프",
   },
@@ -74,17 +71,9 @@ const categories = [
     no: "04",
     name: "생활소모품",
     desc: "종이제품 · 생활 부자재",
-    count: "76 품목",
     image: catDaily,
     alt: "페이퍼 타월 롤",
   },
-];
-
-const bestSellers = [
-  { image: pOutlet, alt: "화이트 1구 콘센트", category: "전기자재", name: "1구 콘센트 A형 화이트", price: "2,400", unit: "개", tag: "BEST" },
-  { image: pGloves, alt: "니트릴 위생 장갑", category: "위생·청소", name: "니트릴 위생 장갑 M 100매", price: "3,100", unit: "박스", tag: "2+1" },
-  { image: pTape, alt: "투명 양면 테이프", category: "사무·포장", name: "양면 폼 테이프 15mm", price: "1,800", unit: "롤", tag: "" },
-  { image: pTowel, alt: "키친 타월 롤", category: "생활소모품", name: "무형광 키친타월 10롤", price: "4,500", unit: "세트", tag: "NEW" },
 ];
 
 const services = [
@@ -126,40 +115,70 @@ function SectionHead({
 }
 
 function Index() {
+  const { data: products } = useQuery({
+    queryKey: ["storefront-products"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return data as Product[];
+    },
+  });
+
+  const bestSellers = (products ?? []).filter((p) => p.is_best);
+  const categoryCounts = new Map<string, number>();
+  for (const p of products ?? []) {
+    categoryCounts.set(p.category, (categoryCounts.get(p.category) ?? 0) + 1);
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Utility bar */}
-      <div className="hairline-b hidden lg:block">
-        <div className="mx-auto flex max-w-[1400px] items-center justify-end gap-6 px-8 py-2.5 text-[11px] tracking-wide text-muted-foreground">
+      <div className="hairline-b hidden bg-paper lg:block">
+        <div className="mx-auto flex max-w-[1400px] items-center justify-end gap-8 px-8 py-3 text-[10px] tracking-[0.14em] text-muted-foreground">
           <a href="#" className="link-underline hover:text-foreground">로그인</a>
           <a href="#" className="link-underline hover:text-foreground">회원가입</a>
-          <a href="#" className="link-underline hover:text-foreground">고객센터</a>
-          <a href="#" className="link-underline hover:text-foreground">기업구매</a>
+          <InquiryDialog
+            trigger={
+              <button type="button" className="link-underline hover:text-foreground">
+                고객센터
+              </button>
+            }
+          />
+          <InquiryDialog
+            trigger={
+              <button type="button" className="link-underline hover:text-foreground">
+                기업구매
+              </button>
+            }
+          />
         </div>
       </div>
 
       {/* Header */}
       <header className="hairline-b sticky top-0 z-50 bg-background/95 backdrop-blur">
-        <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-5 sm:px-8">
+        <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-7 sm:px-8">
           <div className="flex items-center gap-10">
             <a href="/" className="leading-none">
-              <p className="font-display text-xl font-black tracking-[0.14em]">
+              <p className="font-display text-2xl font-bold tracking-[0.16em]">
                 SE <span className="text-accent">·</span> 종합물산
               </p>
-              <p className="mt-1.5 text-[9px] font-medium uppercase tracking-label text-muted-foreground">
+              <p className="mt-2 text-[9px] font-medium uppercase tracking-label text-muted-foreground">
                 Everyday Commodities
               </p>
             </a>
           </div>
 
           <nav className="hidden lg:block">
-            <ul className="flex items-center gap-9 text-[13px] font-medium">
+            <ul className="flex items-center gap-11 text-[12px] font-medium tracking-[0.04em]">
               {navItems.map((item, i) => (
                 <li key={item}>
                   <a
                     href="#categories"
                     className={`link-underline pb-1 transition-colors hover:text-foreground ${
-                      i === 0 ? "text-foreground" : "text-foreground/65"
+                      i === 0 ? "text-foreground" : "text-foreground/60"
                     }`}
                   >
                     {item}
@@ -169,21 +188,21 @@ function Index() {
             </ul>
           </nav>
 
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-6">
             <button aria-label="검색" className="text-foreground/70 transition-colors hover:text-foreground">
-              <Search className="size-[18px]" strokeWidth={1.25} />
+              <Search className="size-[17px]" strokeWidth={1} />
             </button>
             <button aria-label="찜 목록" className="hidden text-foreground/70 transition-colors hover:text-foreground sm:block">
-              <Heart className="size-[18px]" strokeWidth={1.25} />
+              <Heart className="size-[17px]" strokeWidth={1} />
             </button>
             <button aria-label="장바구니" className="relative text-foreground/70 transition-colors hover:text-foreground">
-              <ShoppingBag className="size-[18px]" strokeWidth={1.25} />
-              <span className="absolute -right-2 -top-1.5 min-w-4 bg-accent px-1 text-center text-[9px] font-bold leading-4 text-accent-foreground">
+              <ShoppingBag className="size-[17px]" strokeWidth={1} />
+              <span className="absolute -right-2.5 -top-2 min-w-4 border border-accent px-1 text-center text-[9px] font-medium leading-4 text-accent">
                 12
               </span>
             </button>
             <button aria-label="메뉴" className="text-foreground/70 lg:hidden">
-              <Menu className="size-[18px]" strokeWidth={1.25} />
+              <Menu className="size-[17px]" strokeWidth={1} />
             </button>
           </div>
         </div>
@@ -192,37 +211,37 @@ function Index() {
       <main>
         {/* Hero — full bleed editorial */}
         <section className="relative">
-          <div className="image-zoom relative h-[68vh] min-h-[520px] w-full overflow-hidden">
+          <div className="image-zoom relative h-[78vh] min-h-[600px] w-full overflow-hidden">
             <img
               src={heroImage}
-              alt="아이보리 스톤 위에 놓인 화이트 스위치와 위생 장갑, 페이퍼 롤"
+              alt="따뜻한 조명 아래 정돈되어 채워진 어두운 실내 공간의 선반"
               width={1920}
               height={1080}
               className="h-full w-full object-cover"
             />
-            <div className="absolute inset-0 bg-ink/35" />
+            <div className="absolute inset-0 bg-ink/55" />
             <div className="absolute inset-0 flex items-center justify-center px-6">
               <div className="fade-up max-w-3xl text-center text-background">
-                <p className="text-[10px] font-semibold uppercase tracking-label">
-                  2026 New Arrivals
+                <p className="text-[10px] font-semibold uppercase tracking-[0.4em] text-background/70">
+                  The Filled Space
                 </p>
-                <h1 className="font-display mt-6 text-3xl font-bold leading-[1.35] tracking-tight sm:text-5xl">
-                  매일의 필요를
+                <h1 className="font-display mt-8 text-4xl font-bold leading-[1.4] tracking-tight sm:text-6xl">
+                  공간을 채우는
                   <br />
-                  정돈하는 상점
+                  모든 것
                 </h1>
-                <p className="mx-auto mt-6 max-w-lg text-sm leading-relaxed text-background/80">
+                <p className="mx-auto mt-8 max-w-lg text-[13px] leading-loose text-background/80">
                   스위치와 콘센트부터 위생 장갑, 청소·사무·포장 용품까지.
-                  일상의 모든 소모품을 한 곳에서.
+                  비어 있는 자리를 채우는 일상의 모든 소모품.
                 </p>
-                <div className="mt-10 flex items-center justify-center gap-4">
+                <div className="mt-12 flex items-center justify-center gap-5">
                   <a
                     href="#best"
-                    className="border border-background/80 px-9 py-3.5 text-xs font-semibold tracking-[0.16em] text-background transition-colors hover:bg-background hover:text-foreground"
+                    className="border border-background/80 px-10 py-4 text-[11px] font-semibold tracking-[0.24em] text-background transition-colors hover:bg-background hover:text-foreground"
                   >베스트 상품 보기</a>
                   <a
                     href="#categories"
-                    className="link-underline pb-0.5 text-xs font-semibold tracking-[0.16em] text-background/90"
+                    className="link-underline pb-0.5 text-[11px] font-semibold tracking-[0.24em] text-background/90"
                   >
                     카테고리 보기
                   </a>
@@ -241,10 +260,10 @@ function Index() {
               ].map((s, i) => (
                 <div
                   key={s.l}
-                  className={`py-8 text-center ${i > 0 ? "border-l border-hairline" : ""}`}
+                  className={`py-10 text-center ${i > 0 ? "border-l border-hairline" : ""}`}
                 >
-                  <p className="font-display text-2xl font-bold sm:text-3xl">{s.v}</p>
-                  <p className="mt-2 text-[11px] tracking-wide text-muted-foreground">{s.l}</p>
+                  <p className="font-display text-3xl font-bold sm:text-[32px]">{s.v}</p>
+                  <p className="mt-2.5 text-[10px] tracking-[0.18em] text-muted-foreground">{s.l}</p>
                 </div>
               ))}
             </div>
@@ -252,7 +271,7 @@ function Index() {
         </section>
 
         {/* 카테고리 */}
-        <section id="categories" className="mx-auto max-w-[1400px] px-6 py-20 sm:px-8">
+        <section id="categories" className="mx-auto max-w-[1400px] px-6 py-28 sm:px-8">
           <SectionHead label="Departments" title="카테고리별 쇼핑" />
           <div className="mt-10 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
             {categories.map((cat) => (
@@ -281,7 +300,7 @@ function Index() {
                   />
                 </div>
                 <p className="mt-3 text-[11px] tracking-wide text-muted-foreground">
-                  {cat.count}
+                  {categoryCounts.get(cat.name) ?? 0} 품목
                 </p>
               </a>
             ))}
@@ -290,49 +309,77 @@ function Index() {
 
         {/* 베스트 */}
         <section id="best" className="bg-paper">
-          <div className="mx-auto max-w-[1400px] px-6 py-20 sm:px-8">
+          <div className="mx-auto max-w-[1400px] px-6 py-28 sm:px-8">
             <SectionHead label="This Week" title="이번 주 베스트" more="베스트 전체" />
-            <div className="mt-10 grid grid-cols-2 gap-x-6 gap-y-12 lg:grid-cols-4">
-              {bestSellers.map((item) => (
-                <article key={item.name} className="image-zoom group">
-                  <div className="relative aspect-square w-full overflow-hidden bg-background">
-                    <img
-                      src={item.image}
-                      alt={item.alt}
-                      loading="lazy"
-                      width={640}
-                      height={640}
-                      className="h-full w-full object-cover"
-                    />
-                    {item.tag ? (
-                      <span className="absolute left-0 top-0 bg-ink px-2.5 py-1 text-[10px] font-bold tracking-[0.14em] text-background">
-                        {item.tag}
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="mt-5 text-[10px] font-semibold tracking-label text-muted-foreground">
-                    {item.category}
-                  </p>
-                  <h3 className="font-display mt-2.5 text-[15px] font-bold leading-snug">
-                    {item.name}
-                  </h3>
-                  <p className="mt-3 text-[15px] font-bold">
-                    ₩{item.price}
-                    <span className="ml-1.5 text-[11px] font-normal text-muted-foreground">
-                      / {item.unit}
-                    </span>
-                  </p>
-                  <button className="hairline-t mt-4 w-full py-3 text-[11px] font-semibold tracking-[0.16em] text-foreground/70 transition-colors hover:text-accent">
-                    장바구니 담기
-                  </button>
-                </article>
-              ))}
-            </div>
+            {bestSellers.length === 0 ? (
+              <p className="mt-10 text-sm text-muted-foreground">
+                등록된 베스트 상품이 없습니다.
+              </p>
+            ) : (
+              <div className="mt-10 grid grid-cols-2 gap-x-6 gap-y-12 lg:grid-cols-4">
+                {bestSellers.map((item) => {
+                  const hasDiscount =
+                    item.original_price != null && item.original_price > item.price;
+                  const discountPercent = hasDiscount
+                    ? Math.round((1 - item.price / item.original_price!) * 100)
+                    : 0;
+
+                  return (
+                    <article key={item.id} className="image-zoom group">
+                      <div className="relative aspect-square w-full overflow-hidden bg-paper">
+                        {item.image_url ? (
+                          <img
+                            src={item.image_url}
+                            alt={item.name}
+                            loading="lazy"
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+                            이미지 준비중
+                          </div>
+                        )}
+                        {item.tag ? (
+                          <span className="absolute left-0 top-0 bg-ink px-2.5 py-1 text-[10px] font-bold tracking-[0.14em] text-background">
+                            {item.tag}
+                          </span>
+                        ) : null}
+                        {hasDiscount ? (
+                          <span className="absolute right-0 top-0 bg-accent px-2.5 py-1 text-[10px] font-bold tracking-[0.14em] text-accent-foreground">
+                            {discountPercent}%
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="mt-5 text-[10px] font-semibold tracking-label text-muted-foreground">
+                        {item.category}
+                      </p>
+                      <h3 className="font-display mt-2.5 text-[15px] font-bold leading-snug">
+                        {item.name}
+                      </h3>
+                      {hasDiscount ? (
+                        <p className="mt-3 text-[12px] text-muted-foreground line-through">
+                          ₩{item.original_price!.toLocaleString()}
+                        </p>
+                      ) : null}
+                      <p className={hasDiscount ? "text-[15px] font-bold text-accent" : "mt-3 text-[15px] font-bold"}>
+                        ₩{item.price.toLocaleString()}
+                        <span className="ml-1.5 text-[11px] font-normal text-muted-foreground">
+                          / {item.unit}
+                        </span>
+                      </p>
+                      <button className="hairline-t mt-4 w-full py-3 text-[11px] font-semibold tracking-[0.16em] text-foreground/70 transition-colors hover:text-accent">
+                        장바구니 담기
+                      </button>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </section>
 
         {/* 서비스 */}
-        <section className="mx-auto max-w-[1400px] px-6 py-20 sm:px-8">
+        <section className="mx-auto max-w-[1400px] px-6 py-28 sm:px-8">
           <SectionHead label="Services" title="이용 안내" more="자세히 보기" />
           <div className="mt-10 grid sm:grid-cols-3">
             {services.map((s, i) => (
@@ -347,6 +394,18 @@ function Index() {
                 <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
                   {s.desc}
                 </p>
+                {s.title === "기업 대량구매" ? (
+                  <InquiryDialog
+                    trigger={
+                      <button
+                        type="button"
+                        className="link-underline mt-4 text-[11px] font-semibold tracking-[0.16em] text-accent"
+                      >
+                        문의하기
+                      </button>
+                    }
+                  />
+                ) : null}
               </div>
             ))}
           </div>
@@ -354,7 +413,7 @@ function Index() {
 
         {/* 뉴스레터 */}
         <section className="bg-ink">
-          <div className="mx-auto flex max-w-[1400px] flex-col items-center gap-8 px-6 py-20 text-center sm:px-8">
+          <div className="mx-auto flex max-w-[1400px] flex-col items-center gap-8 px-6 py-28 text-center sm:px-8">
             <p className="text-[10px] font-semibold uppercase tracking-label text-background/60">
               Newsletter
             </p>
@@ -395,8 +454,20 @@ function Index() {
             <div className="flex flex-wrap gap-x-8 gap-y-3 text-[13px] text-muted-foreground">
               <a href="#" className="link-underline hover:text-foreground">회사소개</a>
               <a href="#" className="link-underline hover:text-foreground">배송·반품</a>
-              <a href="#" className="link-underline hover:text-foreground">고객센터</a>
-              <a href="#" className="link-underline hover:text-foreground">대량구매 견적</a>
+              <InquiryDialog
+                trigger={
+                  <button type="button" className="link-underline hover:text-foreground">
+                    고객센터
+                  </button>
+                }
+              />
+              <InquiryDialog
+                trigger={
+                  <button type="button" className="link-underline hover:text-foreground">
+                    대량구매 견적
+                  </button>
+                }
+              />
             </div>
           </div>
           <p className="hairline-t mt-10 pt-6 text-[11px] leading-relaxed text-muted-foreground/80">
