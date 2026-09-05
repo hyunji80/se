@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -108,18 +109,110 @@ function SectionHead({
           {title}
         </h2>
       </div>
-      <a
-        href={href}
-        className="link-underline hidden items-center gap-1.5 self-end pb-1 text-xs font-medium tracking-wide text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
-      >
-        {more}
-        <ArrowRight className="size-3.5" strokeWidth={1.25} />
-      </a>
+      {more ? (
+        <a
+          href={href}
+          className="link-underline hidden items-center gap-1.5 self-end pb-1 text-xs font-medium tracking-wide text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
+        >
+          {more}
+          <ArrowRight className="size-3.5" strokeWidth={1.25} />
+        </a>
+      ) : null}
     </div>
   );
 }
 
+function ProductCard({ item, onAddToCart }: { item: Product; onAddToCart: (item: Product) => void }) {
+  const hasDiscount = item.original_price != null && item.original_price > item.price;
+  const discountPercent = hasDiscount
+    ? Math.round((1 - item.price / item.original_price!) * 100)
+    : 0;
+
+  return (
+    <article className="image-zoom group">
+      <Link to="/product/$id" params={{ id: item.id }}>
+        <div className="relative aspect-square w-full overflow-hidden bg-paper">
+          {item.image_url ? (
+            <img
+              src={item.image_url}
+              alt={item.name}
+              loading="lazy"
+              className={`h-full w-full object-cover ${item.is_sold_out ? "grayscale" : ""}`}
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+              이미지 준비중
+            </div>
+          )}
+          {item.is_sold_out ? (
+            <div className="absolute inset-0 flex items-center justify-center bg-ink/50">
+              <span className="border border-background px-4 py-1.5 text-xs font-bold tracking-[0.2em] text-background">
+                품절
+              </span>
+            </div>
+          ) : null}
+          {item.tag ? (
+            <span className="absolute left-0 top-0 bg-ink px-2.5 py-1 text-[10px] font-bold tracking-[0.14em] text-background">
+              {item.tag}
+            </span>
+          ) : null}
+          {hasDiscount ? (
+            <span className="absolute right-0 top-0 bg-accent px-2.5 py-1 text-[10px] font-bold tracking-[0.14em] text-accent-foreground">
+              {discountPercent}%
+            </span>
+          ) : null}
+        </div>
+        <p className="mt-5 text-[10px] font-semibold tracking-label text-muted-foreground">
+          {item.category}
+        </p>
+        <h3 className="font-display mt-2.5 text-[15px] font-bold leading-snug hover:text-accent">
+          {item.name}
+        </h3>
+      </Link>
+      {hasDiscount ? (
+        <p className="mt-3 text-[12px] text-muted-foreground line-through">
+          ₩{item.original_price!.toLocaleString()}
+        </p>
+      ) : null}
+      <p className={hasDiscount ? "text-[15px] font-bold text-accent" : "mt-3 text-[15px] font-bold"}>
+        ₩{item.price.toLocaleString()}
+        <span className="ml-1.5 text-[11px] font-normal text-muted-foreground">
+          / {item.unit}
+        </span>
+      </p>
+      {item.is_sold_out ? (
+        <RestockDialog
+          product={item}
+          trigger={
+            <button className="hairline-t mt-4 w-full py-3 text-[11px] font-semibold tracking-[0.12em] text-foreground/70 hover:text-[#C98A92]">
+              재입고 알림 신청
+            </button>
+          }
+        />
+      ) : (
+        <div className="hairline-t mt-4 grid grid-cols-2">
+          <button
+            onClick={() => onAddToCart(item)}
+            className="border-r border-hairline py-3 text-[11px] font-semibold tracking-[0.12em] text-foreground/70 transition-colors hover:text-accent"
+          >
+            장바구니
+          </button>
+          <OrderDialog
+            product={item}
+            trigger={
+              <button className="w-full py-3 text-[11px] font-semibold tracking-[0.12em] text-foreground/70 transition-colors hover:text-[#C98A92]">
+                주문하기
+              </button>
+            }
+          />
+        </div>
+      )}
+    </article>
+  );
+}
+
 function Index() {
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { addItem, totalCount: cartCount } = useCart();
   const { data: products } = useQuery({
     queryKey: ["storefront-products"],
@@ -137,6 +230,27 @@ function Index() {
   const categoryCounts = new Map<string, number>();
   for (const p of products ?? []) {
     categoryCounts.set(p.category, (categoryCounts.get(p.category) ?? 0) + 1);
+  }
+  const displayedProducts = selectedCategory
+    ? (products ?? []).filter((p) => p.category === selectedCategory)
+    : (products ?? []);
+
+  function handleAddToCart(item: Product) {
+    addItem({
+      productId: item.id,
+      productName: item.name,
+      unitPrice: item.price,
+      quantity: 1,
+      optionNames: [],
+      imageUrl: item.image_url,
+      unit: item.unit,
+    });
+    toast.success("장바구니에 담았습니다");
+  }
+
+  function goToCategory(name: string) {
+    setSelectedCategory(name);
+    document.getElementById("all-products")?.scrollIntoView({ behavior: "smooth" });
   }
 
   return (
@@ -181,14 +295,24 @@ function Index() {
             <ul className="flex items-center gap-11 text-[12px] font-medium tracking-[0.04em]">
               {navItems.map((item, i) => (
                 <li key={item}>
-                  <a
-                    href="#categories"
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (item === "전체상품") {
+                        setSelectedCategory(null);
+                        document.getElementById("all-products")?.scrollIntoView({ behavior: "smooth" });
+                      } else if (categories.some((c) => c.name === item)) {
+                        goToCategory(item);
+                      } else {
+                        document.getElementById("categories")?.scrollIntoView({ behavior: "smooth" });
+                      }
+                    }}
                     className={`link-underline pb-1 transition-colors hover:text-foreground ${
                       i === 0 ? "text-foreground" : "text-foreground/60"
                     }`}
                   >
                     {item}
-                  </a>
+                  </button>
                 </li>
               ))}
             </ul>
@@ -287,7 +411,12 @@ function Index() {
           <SectionHead label="Departments" title="카테고리별 쇼핑" />
           <div className="mt-10 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
             {categories.map((cat) => (
-              <a key={cat.name} href="#" className="image-zoom group block">
+              <button
+                key={cat.name}
+                type="button"
+                onClick={() => goToCategory(cat.name)}
+                className="image-zoom group block text-left"
+              >
                 <div className="aspect-[4/5] w-full overflow-hidden bg-paper">
                   <img
                     src={cat.image}
@@ -314,7 +443,7 @@ function Index() {
                 <p className="mt-3 text-[11px] tracking-wide text-muted-foreground">
                   {categoryCounts.get(cat.name) ?? 0} 품목
                 </p>
-              </a>
+              </button>
             ))}
           </div>
         </section>
@@ -329,111 +458,60 @@ function Index() {
               </p>
             ) : (
               <div className="mt-10 grid grid-cols-2 gap-x-6 gap-y-12 lg:grid-cols-4">
-                {bestSellers.map((item) => {
-                  const hasDiscount =
-                    item.original_price != null && item.original_price > item.price;
-                  const discountPercent = hasDiscount
-                    ? Math.round((1 - item.price / item.original_price!) * 100)
-                    : 0;
-
-                  return (
-                    <article key={item.id} className="image-zoom group">
-                      <Link to="/product/$id" params={{ id: item.id }}>
-                        <div className="relative aspect-square w-full overflow-hidden bg-paper">
-                          {item.image_url ? (
-                            <img
-                              src={item.image_url}
-                              alt={item.name}
-                              loading="lazy"
-                              className={`h-full w-full object-cover ${
-                                item.is_sold_out ? "grayscale" : ""
-                              }`}
-                            />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
-                              이미지 준비중
-                            </div>
-                          )}
-                          {item.is_sold_out ? (
-                            <div className="absolute inset-0 flex items-center justify-center bg-ink/50">
-                              <span className="border border-background px-4 py-1.5 text-xs font-bold tracking-[0.2em] text-background">
-                                품절
-                              </span>
-                            </div>
-                          ) : null}
-                          {item.tag ? (
-                            <span className="absolute left-0 top-0 bg-ink px-2.5 py-1 text-[10px] font-bold tracking-[0.14em] text-background">
-                              {item.tag}
-                            </span>
-                          ) : null}
-                          {hasDiscount ? (
-                            <span className="absolute right-0 top-0 bg-accent px-2.5 py-1 text-[10px] font-bold tracking-[0.14em] text-accent-foreground">
-                              {discountPercent}%
-                            </span>
-                          ) : null}
-                        </div>
-                        <p className="mt-5 text-[10px] font-semibold tracking-label text-muted-foreground">
-                          {item.category}
-                        </p>
-                        <h3 className="font-display mt-2.5 text-[15px] font-bold leading-snug hover:text-accent">
-                          {item.name}
-                        </h3>
-                      </Link>
-                      {hasDiscount ? (
-                        <p className="mt-3 text-[12px] text-muted-foreground line-through">
-                          ₩{item.original_price!.toLocaleString()}
-                        </p>
-                      ) : null}
-                      <p className={hasDiscount ? "text-[15px] font-bold text-accent" : "mt-3 text-[15px] font-bold"}>
-                        ₩{item.price.toLocaleString()}
-                        <span className="ml-1.5 text-[11px] font-normal text-muted-foreground">
-                          / {item.unit}
-                        </span>
-                      </p>
-                      {item.is_sold_out ? (
-                        <RestockDialog
-                          product={item}
-                          trigger={
-                            <button className="hairline-t mt-4 w-full py-3 text-[11px] font-semibold tracking-[0.12em] text-foreground/70 hover:text-[#C98A92]">
-                              재입고 알림 신청
-                            </button>
-                          }
-                        />
-                      ) : (
-                        <div className="hairline-t mt-4 grid grid-cols-2">
-                          <button
-                            onClick={() => {
-                              addItem({
-                                productId: item.id,
-                                productName: item.name,
-                                unitPrice: item.price,
-                                quantity: 1,
-                                optionNames: [],
-                                imageUrl: item.image_url,
-                                unit: item.unit,
-                              });
-                              toast.success("장바구니에 담았습니다");
-                            }}
-                            className="border-r border-hairline py-3 text-[11px] font-semibold tracking-[0.12em] text-foreground/70 transition-colors hover:text-accent"
-                          >
-                            장바구니
-                          </button>
-                          <OrderDialog
-                            product={item}
-                            trigger={
-                              <button className="w-full py-3 text-[11px] font-semibold tracking-[0.12em] text-foreground/70 transition-colors hover:text-[#C98A92]">
-                                주문하기
-                              </button>
-                            }
-                          />
-                        </div>
-                      )}
-                    </article>
-                  );
-                })}
+                {bestSellers.map((item) => (
+                  <ProductCard key={item.id} item={item} onAddToCart={handleAddToCart} />
+                ))}
               </div>
             )}
           </div>
+        </section>
+
+        {/* 전체 상품 */}
+        <section id="all-products" className="mx-auto max-w-[1400px] px-6 py-28 sm:px-8">
+          <SectionHead
+            label="Catalog"
+            title={selectedCategory ?? "전체 상품"}
+            href="#all-products"
+            more=""
+          />
+          <div className="mt-8 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setSelectedCategory(null)}
+              className={`border px-4 py-2 text-[11px] font-semibold tracking-[0.1em] transition-colors ${
+                selectedCategory === null
+                  ? "border-foreground bg-foreground text-background"
+                  : "border-hairline text-foreground/70 hover:border-foreground"
+              }`}
+            >
+              전체
+            </button>
+            {categories.map((cat) => (
+              <button
+                key={cat.name}
+                type="button"
+                onClick={() => setSelectedCategory(cat.name)}
+                className={`border px-4 py-2 text-[11px] font-semibold tracking-[0.1em] transition-colors ${
+                  selectedCategory === cat.name
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-hairline text-foreground/70 hover:border-foreground"
+                }`}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+          {displayedProducts.length === 0 ? (
+            <p className="mt-10 text-sm text-muted-foreground">
+              아직 등록된 상품이 없습니다.
+            </p>
+          ) : (
+            <div className="mt-10 grid grid-cols-2 gap-x-6 gap-y-12 lg:grid-cols-4">
+              {displayedProducts.map((item) => (
+                <ProductCard key={item.id} item={item} onAddToCart={handleAddToCart} />
+              ))}
+            </div>
+          )}
         </section>
 
         {/* 서비스 */}
