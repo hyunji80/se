@@ -449,24 +449,6 @@ function Index() {
           </div>
         </section>
 
-        {/* 베스트 */}
-        <section id="best" className="bg-paper">
-          <div className="mx-auto max-w-[1400px] px-6 py-28 sm:px-8">
-            <SectionHead label="This Week" title="이번 주 베스트" more="베스트 전체" />
-            {bestSellers.length === 0 ? (
-              <p className="mt-10 text-sm text-muted-foreground">
-                등록된 베스트 상품이 없습니다.
-              </p>
-            ) : (
-              <div className="mt-10 grid grid-cols-2 gap-x-6 gap-y-12 lg:grid-cols-4">
-                {bestSellers.map((item) => (
-                  <ProductCard key={item.id} item={item} onAddToCart={handleAddToCart} />
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-
         {/* 전체 상품 */}
         <section id="all-products" className="mx-auto max-w-[1400px] px-6 py-28 sm:px-8">
           <SectionHead
