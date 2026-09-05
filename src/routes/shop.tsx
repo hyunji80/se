@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 
 import { InquiryDialog } from "@/components/inquiry-dialog";
+import { ShippingPolicyDialog } from "@/components/shipping-policy-dialog";
 import { OrderDialog } from "@/components/order-dialog";
 import { RestockDialog } from "@/components/restock-dialog";
 import { supabase, type Product } from "@/lib/supabase";
@@ -84,7 +85,11 @@ const categories = [
 
 const services = [
   { icon: Truck, title: "당일 출고", desc: "오후 2시 이전 주문 시 당일 발송됩니다." },
-  { icon: RotateCcw, title: "무상 반품", desc: "불량·오배송 시 왕복 운임을 부담하지 않습니다." },
+  {
+    icon: RotateCcw,
+    title: "배송·반품 규정안내",
+    desc: "오배송·불량 상품은 무상으로 회수해 드립니다.",
+  },
   { icon: Building2, title: "기업 대량구매", desc: "견적서와 세금계산서를 즉시 발급해 드립니다." },
 ];
 
@@ -515,6 +520,18 @@ function Index() {
                         className="link-underline mt-4 text-[11px] font-semibold tracking-[0.16em] text-accent"
                       >
                         문의하기
+                      </button>
+                    }
+                  />
+                ) : null}
+                {s.title === "배송·반품 규정안내" ? (
+                  <ShippingPolicyDialog
+                    trigger={
+                      <button
+                        type="button"
+                        className="link-underline mt-4 text-[11px] font-semibold tracking-[0.16em] text-accent"
+                      >
+                        자세히 보기
                       </button>
                     }
                   />
