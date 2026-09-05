@@ -14,6 +14,7 @@ export type Product = {
   unit: string;
   image_url: string | null;
   description: string | null;
+  detail_html: string | null;
   tag: string | null;
   is_best: boolean;
   sort_order: number;

@@ -1,3 +1,4 @@
+import { useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft } from "lucide-react";
@@ -9,6 +10,25 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/product/$id")({
   component: ProductDetailPage,
 });
+
+function DetailHtmlFrame({ html }: { html: string }) {
+  const [height, setHeight] = useState(600);
+  const ref = useRef<HTMLIFrameElement>(null);
+
+  return (
+    <iframe
+      ref={ref}
+      srcDoc={html}
+      title="상품 상세페이지"
+      style={{ height }}
+      className="w-full border-0"
+      onLoad={() => {
+        const doc = ref.current?.contentWindow?.document;
+        if (doc) setHeight(doc.documentElement.scrollHeight);
+      }}
+    />
+  );
+}
 
 function ProductDetailPage() {
   const { id } = Route.useParams();
@@ -104,7 +124,7 @@ function ProductDetailPage() {
             }
           />
 
-          {product.description ? (
+          {!product.detail_html && product.description ? (
             <div className="hairline-t mt-10 pt-8">
               <h2 className="font-display text-sm font-bold">상품 설명</h2>
               <p className="mt-4 whitespace-pre-line text-[13px] leading-relaxed text-muted-foreground">
@@ -114,6 +134,12 @@ function ProductDetailPage() {
           ) : null}
         </div>
       </main>
+
+      {product.detail_html ? (
+        <div className="hairline-t mx-auto max-w-[1000px]">
+          <DetailHtmlFrame html={product.detail_html} />
+        </div>
+      ) : null}
     </div>
   );
 }

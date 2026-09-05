@@ -383,6 +383,7 @@ function ProductDialog({
     unit: "개",
     image_url: "",
     description: "",
+    detail_html: "",
     tag: "",
     is_best: false,
   });
@@ -397,6 +398,7 @@ function ProductDialog({
         unit: product.unit,
         image_url: product.image_url ?? "",
         description: product.description ?? "",
+        detail_html: product.detail_html ?? "",
         tag: product.tag ?? "",
         is_best: product.is_best,
       });
@@ -409,6 +411,7 @@ function ProductDialog({
         unit: "개",
         image_url: "",
         description: "",
+        detail_html: "",
         tag: "",
         is_best: false,
       });
@@ -444,6 +447,7 @@ function ProductDialog({
         unit: form.unit,
         image_url: form.image_url || null,
         description: form.description || null,
+        detail_html: form.detail_html || null,
         tag: form.tag || null,
         is_best: form.is_best,
       };
@@ -565,11 +569,24 @@ function ProductDialog({
             )}
           </div>
           <div className="space-y-2">
-            <Label>상세 설명 (선택 — 사용법, 특징, 장단점 등 자유롭게 작성)</Label>
+            <Label>상세 설명 (선택 — 짧은 줄글, 아래 커스텀 페이지가 없을 때만 표시됩니다)</Label>
             <Textarea
-              rows={5}
+              rows={4}
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>
+              커스텀 상세페이지 HTML (선택 — 통째로 만든 HTML 파일 내용을 붙여넣으면 디자인 그대로
+              보여줍니다. 입력 시 위 "상세 설명" 대신 이게 표시됩니다)
+            </Label>
+            <Textarea
+              rows={6}
+              placeholder="<!doctype html>...로 시작하는 전체 HTML을 붙여넣으세요"
+              value={form.detail_html}
+              onChange={(e) => setForm((f) => ({ ...f, detail_html: e.target.value }))}
+              className="font-mono text-xs"
             />
           </div>
           <div className="space-y-2">
