@@ -13,8 +13,21 @@ export type Product = {
   original_price: number | null;
   unit: string;
   image_url: string | null;
+  description: string | null;
   tag: string | null;
   is_best: boolean;
   sort_order: number;
+  created_at: string;
+};
+
+export type Order = {
+  id: string;
+  product_id: string | null;
+  product_name: string;
+  unit_price: number;
+  quantity: number;
+  buyer_name: string;
+  buyer_phone: string;
+  status: string;
   created_at: string;
 };

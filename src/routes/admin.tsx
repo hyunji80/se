@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Session } from "@supabase/supabase-js";
-import { Plus, Pencil, Trash2, LogOut } from "lucide-react";
+import { Plus, Pencil, Trash2, LogOut, UploadCloud, X } from "lucide-react";
 import { toast } from "sonner";
 
-import { supabase, type Product } from "@/lib/supabase";
+import { supabase, type Product, type Order } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Table,
@@ -38,6 +39,7 @@ export const Route = createFileRoute("/admin")({
 
 const CATEGORIES = ["전기자재", "위생·청소", "사무·포장", "생활소모품"] as const;
 const DEFAULT_CATEGORY: string = CATEGORIES[0];
+const ORDER_STATUSES = ["입금대기", "입금확인", "발송완료", "취소"] as const;
 
 function AdminPage() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
@@ -54,7 +56,39 @@ function AdminPage() {
     return <div className="flex min-h-screen items-center justify-center">불러오는 중...</div>;
   }
 
-  return session ? <ProductManager /> : <LoginForm />;
+  return session ? <AdminDashboard /> : <LoginForm />;
+}
+
+function AdminDashboard() {
+  const [tab, setTab] = useState<"products" | "orders">("products");
+
+  return (
+    <div className="mx-auto max-w-5xl px-6 py-10">
+      <div className="mb-6 flex items-center justify-between">
+        <div className="flex items-center gap-6">
+          <button
+            type="button"
+            onClick={() => setTab("products")}
+            className={`font-display text-2xl font-bold ${tab === "products" ? "" : "text-muted-foreground"}`}
+          >
+            상품 관리
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab("orders")}
+            className={`font-display text-2xl font-bold ${tab === "orders" ? "" : "text-muted-foreground"}`}
+          >
+            주문 관리
+          </button>
+        </div>
+        <Button variant="outline" onClick={() => supabase.auth.signOut()}>
+          <LogOut className="mr-1.5 size-4" />
+          로그아웃
+        </Button>
+      </div>
+      {tab === "products" ? <ProductManager /> : <OrderManager />}
+    </div>
+  );
 }
 
 function LoginForm() {
@@ -144,19 +178,12 @@ function ProductManager() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-10">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold">상품 관리</h1>
-        <div className="flex items-center gap-2">
-          <Button onClick={openCreate}>
-            <Plus className="mr-1.5 size-4" />
-            상품 추가
-          </Button>
-          <Button variant="outline" onClick={() => supabase.auth.signOut()}>
-            <LogOut className="mr-1.5 size-4" />
-            로그아웃
-          </Button>
-        </div>
+    <div>
+      <div className="mb-6 flex justify-end">
+        <Button onClick={openCreate}>
+          <Plus className="mr-1.5 size-4" />
+          상품 추가
+        </Button>
       </div>
 
       {isLoading ? (
@@ -225,6 +252,118 @@ function ProductManager() {
   );
 }
 
+function OrderManager() {
+  const queryClient = useQueryClient();
+
+  const { data: orders, isLoading } = useQuery({
+    queryKey: ["admin-orders"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as Order[];
+    },
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { error } = await supabase.from("orders").update({ status }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+      toast.success("상태가 변경되었습니다");
+    },
+    onError: (error: Error) => toast.error("변경 실패: " + error.message),
+  });
+
+  const deleteOrderMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("orders").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+      toast.success("삭제되었습니다");
+    },
+    onError: (error: Error) => toast.error("삭제 실패: " + error.message),
+  });
+
+  return (
+    <div>
+      {isLoading ? (
+        <p className="text-muted-foreground">불러오는 중...</p>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>주문일시</TableHead>
+              <TableHead>상품</TableHead>
+              <TableHead>수량</TableHead>
+              <TableHead>금액</TableHead>
+              <TableHead>주문자</TableHead>
+              <TableHead>연락처</TableHead>
+              <TableHead>상태</TableHead>
+              <TableHead className="text-right">작업</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {orders?.map((order) => (
+              <TableRow key={order.id}>
+                <TableCell>{new Date(order.created_at).toLocaleString("ko-KR")}</TableCell>
+                <TableCell>{order.product_name}</TableCell>
+                <TableCell>{order.quantity}</TableCell>
+                <TableCell>₩{(order.unit_price * order.quantity).toLocaleString()}</TableCell>
+                <TableCell>{order.buyer_name}</TableCell>
+                <TableCell>{order.buyer_phone}</TableCell>
+                <TableCell>
+                  <Select
+                    value={order.status}
+                    onValueChange={(status) => updateStatusMutation.mutate({ id: order.id, status })}
+                  >
+                    <SelectTrigger className="w-28">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ORDER_STATUSES.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {s}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      if (confirm(`${order.buyer_name}님의 주문을 삭제하시겠습니까?`)) {
+                        deleteOrderMutation.mutate(order.id);
+                      }
+                    }}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+            {orders?.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center text-muted-foreground">
+                  접수된 주문이 없습니다
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      )}
+    </div>
+  );
+}
+
 function ProductDialog({
   open,
   onOpenChange,
@@ -235,6 +374,7 @@ function ProductDialog({
   product: Product | null;
 }) {
   const queryClient = useQueryClient();
+  const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState({
     category: DEFAULT_CATEGORY,
     name: "",
@@ -242,6 +382,7 @@ function ProductDialog({
     original_price: "",
     unit: "개",
     image_url: "",
+    description: "",
     tag: "",
     is_best: false,
   });
@@ -255,6 +396,7 @@ function ProductDialog({
         original_price: product.original_price != null ? String(product.original_price) : "",
         unit: product.unit,
         image_url: product.image_url ?? "",
+        description: product.description ?? "",
         tag: product.tag ?? "",
         is_best: product.is_best,
       });
@@ -266,11 +408,31 @@ function ProductDialog({
         original_price: "",
         unit: "개",
         image_url: "",
+        description: "",
         tag: "",
         is_best: false,
       });
     }
   }, [product, open]);
+
+  async function handleFile(file: File) {
+    if (!file.type.startsWith("image/")) {
+      toast.error("이미지 파일만 업로드할 수 있습니다");
+      return;
+    }
+    setUploading(true);
+    try {
+      const path = `${Date.now()}-${file.name}`;
+      const { error } = await supabase.storage.from("product-images").upload(path, file);
+      if (error) throw error;
+      const { data } = supabase.storage.from("product-images").getPublicUrl(path);
+      setForm((f) => ({ ...f, image_url: data.publicUrl }));
+    } catch (error) {
+      toast.error("이미지 업로드 실패: " + (error as Error).message);
+    } finally {
+      setUploading(false);
+    }
+  }
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -281,6 +443,7 @@ function ProductDialog({
         original_price: form.original_price ? Number(form.original_price) : null,
         unit: form.unit,
         image_url: form.image_url || null,
+        description: form.description || null,
         tag: form.tag || null,
         is_best: form.is_best,
       };
@@ -364,10 +527,49 @@ function ProductDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label>이미지 URL (선택)</Label>
-            <Input
-              value={form.image_url}
-              onChange={(e) => setForm((f) => ({ ...f, image_url: e.target.value }))}
+            <Label>상품 이미지 (선택)</Label>
+            {form.image_url ? (
+              <div className="relative w-fit">
+                <img src={form.image_url} alt="" className="h-32 w-32 object-cover" />
+                <button
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, image_url: "" }))}
+                  className="absolute -right-2 -top-2 rounded-full bg-foreground p-1 text-background"
+                >
+                  <X className="size-3" />
+                </button>
+              </div>
+            ) : (
+              <label
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const file = e.dataTransfer.files[0];
+                  if (file) handleFile(file);
+                }}
+                className="flex h-32 w-full cursor-pointer flex-col items-center justify-center gap-2 border border-dashed border-hairline text-sm text-muted-foreground hover:border-foreground"
+              >
+                <UploadCloud className="size-5" />
+                {uploading ? "업로드 중..." : "클릭하거나 이미지를 끌어다 놓으세요"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={uploading}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleFile(file);
+                  }}
+                />
+              </label>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label>상세 설명 (선택 — 사용법, 특징, 장단점 등 자유롭게 작성)</Label>
+            <Textarea
+              rows={5}
+              value={form.description}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
             />
           </div>
           <div className="space-y-2">

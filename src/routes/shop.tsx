@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
   Search,
@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { InquiryDialog } from "@/components/inquiry-dialog";
+import { OrderDialog } from "@/components/order-dialog";
 import { supabase, type Product } from "@/lib/supabase";
 
 import heroImage from "@/assets/hero-space-shop.jpg";
@@ -326,36 +327,38 @@ function Index() {
 
                   return (
                     <article key={item.id} className="image-zoom group">
-                      <div className="relative aspect-square w-full overflow-hidden bg-paper">
-                        {item.image_url ? (
-                          <img
-                            src={item.image_url}
-                            alt={item.name}
-                            loading="lazy"
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
-                            이미지 준비중
-                          </div>
-                        )}
-                        {item.tag ? (
-                          <span className="absolute left-0 top-0 bg-ink px-2.5 py-1 text-[10px] font-bold tracking-[0.14em] text-background">
-                            {item.tag}
-                          </span>
-                        ) : null}
-                        {hasDiscount ? (
-                          <span className="absolute right-0 top-0 bg-accent px-2.5 py-1 text-[10px] font-bold tracking-[0.14em] text-accent-foreground">
-                            {discountPercent}%
-                          </span>
-                        ) : null}
-                      </div>
-                      <p className="mt-5 text-[10px] font-semibold tracking-label text-muted-foreground">
-                        {item.category}
-                      </p>
-                      <h3 className="font-display mt-2.5 text-[15px] font-bold leading-snug">
-                        {item.name}
-                      </h3>
+                      <Link to="/product/$id" params={{ id: item.id }}>
+                        <div className="relative aspect-square w-full overflow-hidden bg-paper">
+                          {item.image_url ? (
+                            <img
+                              src={item.image_url}
+                              alt={item.name}
+                              loading="lazy"
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+                              이미지 준비중
+                            </div>
+                          )}
+                          {item.tag ? (
+                            <span className="absolute left-0 top-0 bg-ink px-2.5 py-1 text-[10px] font-bold tracking-[0.14em] text-background">
+                              {item.tag}
+                            </span>
+                          ) : null}
+                          {hasDiscount ? (
+                            <span className="absolute right-0 top-0 bg-accent px-2.5 py-1 text-[10px] font-bold tracking-[0.14em] text-accent-foreground">
+                              {discountPercent}%
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className="mt-5 text-[10px] font-semibold tracking-label text-muted-foreground">
+                          {item.category}
+                        </p>
+                        <h3 className="font-display mt-2.5 text-[15px] font-bold leading-snug hover:text-accent">
+                          {item.name}
+                        </h3>
+                      </Link>
                       {hasDiscount ? (
                         <p className="mt-3 text-[12px] text-muted-foreground line-through">
                           ₩{item.original_price!.toLocaleString()}
@@ -367,9 +370,14 @@ function Index() {
                           / {item.unit}
                         </span>
                       </p>
-                      <button className="hairline-t mt-4 w-full py-3 text-[11px] font-semibold tracking-[0.16em] text-foreground/70 transition-colors hover:text-accent">
-                        장바구니 담기
-                      </button>
+                      <OrderDialog
+                        product={item}
+                        trigger={
+                          <button className="hairline-t mt-4 w-full py-3 text-[11px] font-semibold tracking-[0.16em] text-foreground/70 transition-colors hover:text-accent">
+                            주문하기
+                          </button>
+                        }
+                      />
                     </article>
                   );
                 })}
