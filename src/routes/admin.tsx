@@ -476,7 +476,7 @@ function ProductDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{product ? "상품 수정" : "상품 추가"}</DialogTitle>
         </DialogHeader>
@@ -587,12 +587,12 @@ function ProductDialog({
             />
           </div>
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>
-                커스텀 상세페이지 HTML (선택 — 파일을 끌어다 놓거나, 첨부하거나, 내용을 붙여넣으세요.
-                입력 시 위 "상세 설명" 대신 이게 표시됩니다)
-              </Label>
-              <label className="shrink-0 cursor-pointer text-xs font-medium text-accent hover:underline">
+            <Label>
+              커스텀 상세페이지 HTML (선택 — 파일을 끌어다 놓거나, 첨부하거나, 내용을 붙여넣으세요.
+              입력 시 위 "상세 설명" 대신 이게 표시됩니다)
+            </Label>
+            <div className="flex justify-end">
+              <label className="cursor-pointer text-xs font-medium text-accent hover:underline">
                 파일 선택
                 <input
                   type="file"
