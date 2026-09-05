@@ -495,6 +495,37 @@ function Index() {
           )}
         </section>
 
+        {/* 뉴스레터 */}
+        <section className="bg-ink">
+          <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-4 px-6 py-6 text-center sm:flex-row sm:gap-8 sm:px-8 sm:text-left">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-label text-background/60">
+                Newsletter
+              </p>
+              <h2 className="font-display mt-1 text-base font-bold text-background sm:text-lg">
+                새 입고 소식을 가장 먼저
+                <span className="ml-2 text-[13px] font-normal text-background/60">
+                  주 1회, 할인 쿠폰과 함께 전해드립니다.
+                </span>
+              </h2>
+            </div>
+            <form className="flex w-full max-w-xs items-center border-b border-background/40 pb-1.5 sm:w-auto">
+              <input
+                type="email"
+                placeholder="이메일 주소"
+                aria-label="이메일 주소"
+                className="w-full bg-transparent px-1 py-1.5 text-sm text-background outline-none placeholder:text-background/45"
+              />
+              <button
+                type="submit"
+                className="shrink-0 px-2 text-[11px] font-semibold tracking-[0.16em] text-background transition-colors hover:text-accent"
+              >
+                구독
+              </button>
+            </form>
+          </div>
+        </section>
+
         {/* 서비스 */}
         <section className="mx-auto max-w-[1400px] px-6 py-28 sm:px-8">
           <SectionHead label="Services" title="이용 안내" more="자세히 보기" />
@@ -533,35 +564,6 @@ function Index() {
                 ) : null}
               </div>
             ))}
-          </div>
-        </section>
-
-        {/* 뉴스레터 */}
-        <section className="bg-ink">
-          <div className="mx-auto flex max-w-[1400px] flex-col items-center gap-8 px-6 py-28 text-center sm:px-8">
-            <p className="text-[10px] font-semibold uppercase tracking-label text-background/60">
-              Newsletter
-            </p>
-            <h2 className="font-display text-2xl font-bold leading-snug text-background sm:text-[32px]">
-              새 입고 소식을 가장 먼저
-            </h2>
-            <p className="text-[13px] text-background/70">
-              주 1회, 할인 쿠폰과 함께 전해드립니다.
-            </p>
-            <form className="flex w-full max-w-md items-center border-b border-background/40 pb-2">
-              <input
-                type="email"
-                placeholder="이메일 주소"
-                aria-label="이메일 주소"
-                className="w-full bg-transparent px-1 py-2 text-sm text-background outline-none placeholder:text-background/45"
-              />
-              <button
-                type="submit"
-                className="shrink-0 px-2 text-[11px] font-semibold tracking-[0.16em] text-background transition-colors hover:text-accent"
-              >
-                구독
-              </button>
-            </form>
           </div>
         </section>
 
