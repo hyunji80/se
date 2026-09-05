@@ -373,7 +373,7 @@ function Index() {
                 </p>
                 <div className="mt-12 flex items-center justify-center gap-5">
                   <a
-                    href="#best"
+                    href="#all-products"
                     className="border border-background/80 px-10 py-4 text-[14px] font-semibold tracking-[0.24em] text-background transition-colors hover:bg-background hover:text-foreground"
                   >베스트 상품 보기</a>
                   <a
