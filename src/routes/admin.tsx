@@ -437,6 +437,16 @@ function ProductDialog({
     }
   }
 
+  function handleHtmlFile(file: File) {
+    if (!file.name.toLowerCase().endsWith(".html") && !file.name.toLowerCase().endsWith(".htm")) {
+      toast.error("HTML 파일만 업로드할 수 있습니다");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setForm((f) => ({ ...f, detail_html: String(reader.result) }));
+    reader.readAsText(file);
+  }
+
   const saveMutation = useMutation({
     mutationFn: async () => {
       const payload = {
@@ -577,15 +587,36 @@ function ProductDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label>
-              커스텀 상세페이지 HTML (선택 — 통째로 만든 HTML 파일 내용을 붙여넣으면 디자인 그대로
-              보여줍니다. 입력 시 위 "상세 설명" 대신 이게 표시됩니다)
-            </Label>
+            <div className="flex items-center justify-between">
+              <Label>
+                커스텀 상세페이지 HTML (선택 — 파일을 끌어다 놓거나, 첨부하거나, 내용을 붙여넣으세요.
+                입력 시 위 "상세 설명" 대신 이게 표시됩니다)
+              </Label>
+              <label className="shrink-0 cursor-pointer text-xs font-medium text-accent hover:underline">
+                파일 선택
+                <input
+                  type="file"
+                  accept=".html,.htm,text/html"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleHtmlFile(file);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+            </div>
             <Textarea
               rows={6}
-              placeholder="<!doctype html>...로 시작하는 전체 HTML을 붙여넣으세요"
+              placeholder="<!doctype html>...로 시작하는 전체 HTML을 붙여넣거나, HTML 파일을 이 칸에 끌어다 놓으세요"
               value={form.detail_html}
               onChange={(e) => setForm((f) => ({ ...f, detail_html: e.target.value }))}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                const file = e.dataTransfer.files[0];
+                if (file) handleHtmlFile(file);
+              }}
               className="font-mono text-xs"
             />
           </div>
