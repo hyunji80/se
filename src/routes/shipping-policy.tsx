@@ -51,7 +51,7 @@ const SECTIONS = [
       },
       {
         heading: "환불",
-        body: "반품 상품 확인 후 3영업일 이내 결제하신 수단으로 환불 처리해드립니다.",
+        body: "반품 상품 확인 후 3영업일 이내 환불 처리되며, 환불이 실제로 완료되기까지 걸리는 기간은 결제 수단에 따라 다를 수 있습니다.\n· 신용카드·체크카드: 카드사 승인 취소 절차에 따라 처리되며, 카드사 정책에 따라 3~5영업일 정도 소요될 수 있습니다.\n· 무통장입금(계좌이체): 안내해주신 환불 계좌로 3영업일 이내 입금됩니다.",
       },
     ],
   },
@@ -90,7 +90,7 @@ function ShippingPolicyPage() {
               {section.items.map((item) => (
                 <div key={item.heading}>
                   <p className="text-sm font-bold">{item.heading}</p>
-                  <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
+                  <p className="mt-1.5 whitespace-pre-line text-[13px] leading-relaxed text-muted-foreground">
                     {item.body}
                   </p>
                 </div>
