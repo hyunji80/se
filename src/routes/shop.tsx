@@ -344,13 +344,22 @@ function Index() {
                               src={item.image_url}
                               alt={item.name}
                               loading="lazy"
-                              className="h-full w-full object-cover"
+                              className={`h-full w-full object-cover ${
+                                item.is_sold_out ? "grayscale" : ""
+                              }`}
                             />
                           ) : (
                             <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
                               이미지 준비중
                             </div>
                           )}
+                          {item.is_sold_out ? (
+                            <div className="absolute inset-0 flex items-center justify-center bg-ink/50">
+                              <span className="border border-background px-4 py-1.5 text-xs font-bold tracking-[0.2em] text-background">
+                                품절
+                              </span>
+                            </div>
+                          ) : null}
                           {item.tag ? (
                             <span className="absolute left-0 top-0 bg-ink px-2.5 py-1 text-[10px] font-bold tracking-[0.14em] text-background">
                               {item.tag}
@@ -380,33 +389,42 @@ function Index() {
                           / {item.unit}
                         </span>
                       </p>
-                      <div className="hairline-t mt-4 grid grid-cols-2">
+                      {item.is_sold_out ? (
                         <button
-                          onClick={() => {
-                            addItem({
-                              productId: item.id,
-                              productName: item.name,
-                              unitPrice: item.price,
-                              quantity: 1,
-                              optionNames: [],
-                              imageUrl: item.image_url,
-                              unit: item.unit,
-                            });
-                            toast.success("장바구니에 담았습니다");
-                          }}
-                          className="border-r border-hairline py-3 text-[11px] font-semibold tracking-[0.12em] text-foreground/70 transition-colors hover:text-accent"
+                          disabled
+                          className="hairline-t mt-4 w-full py-3 text-[11px] font-semibold tracking-[0.12em] text-muted-foreground"
                         >
-                          장바구니
+                          품절된 상품입니다
                         </button>
-                        <OrderDialog
-                          product={item}
-                          trigger={
-                            <button className="w-full py-3 text-[11px] font-semibold tracking-[0.12em] text-foreground/70 transition-colors hover:text-accent">
-                              주문하기
-                            </button>
-                          }
-                        />
-                      </div>
+                      ) : (
+                        <div className="hairline-t mt-4 grid grid-cols-2">
+                          <button
+                            onClick={() => {
+                              addItem({
+                                productId: item.id,
+                                productName: item.name,
+                                unitPrice: item.price,
+                                quantity: 1,
+                                optionNames: [],
+                                imageUrl: item.image_url,
+                                unit: item.unit,
+                              });
+                              toast.success("장바구니에 담았습니다");
+                            }}
+                            className="border-r border-hairline py-3 text-[11px] font-semibold tracking-[0.12em] text-foreground/70 transition-colors hover:text-accent"
+                          >
+                            장바구니
+                          </button>
+                          <OrderDialog
+                            product={item}
+                            trigger={
+                              <button className="w-full py-3 text-[11px] font-semibold tracking-[0.12em] text-foreground/70 transition-colors hover:text-[#CD5C5C]">
+                                주문하기
+                              </button>
+                            }
+                          />
+                        </div>
+                      )}
                     </article>
                   );
                 })}

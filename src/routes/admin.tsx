@@ -198,6 +198,7 @@ function ProductManager() {
               <TableHead>판매가</TableHead>
               <TableHead>단위</TableHead>
               <TableHead>베스트</TableHead>
+              <TableHead>품절</TableHead>
               <TableHead className="text-right">작업</TableHead>
             </TableRow>
           </TableHeader>
@@ -218,6 +219,7 @@ function ProductManager() {
                 <TableCell>₩{product.price.toLocaleString()}</TableCell>
                 <TableCell>{product.unit}</TableCell>
                 <TableCell>{product.is_best ? "O" : "-"}</TableCell>
+                <TableCell>{product.is_sold_out ? "품절" : "-"}</TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="icon" asChild>
                     <a href={`/product/${product.id}`} target="_blank" rel="noreferrer">
@@ -243,7 +245,7 @@ function ProductManager() {
             ))}
             {products?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground">
+                <TableCell colSpan={8} className="text-center text-muted-foreground">
                   등록된 상품이 없습니다
                 </TableCell>
               </TableRow>
@@ -395,6 +397,7 @@ function ProductDialog({
     detail_html: "",
     tag: "",
     is_best: false,
+    is_sold_out: false,
     shipping_note: "",
     options: [] as { name: string; extra_price: string }[],
   });
@@ -414,6 +417,7 @@ function ProductDialog({
         detail_html: product.detail_html ?? "",
         tag: product.tag ?? "",
         is_best: product.is_best,
+        is_sold_out: product.is_sold_out,
         shipping_note: product.shipping_note ?? "",
         options: (product.options ?? []).map((o) => ({
           name: o.name,
@@ -432,6 +436,7 @@ function ProductDialog({
         detail_html: "",
         tag: "",
         is_best: false,
+    is_sold_out: false,
         shipping_note: "",
         options: [],
       });
@@ -481,6 +486,7 @@ function ProductDialog({
         detail_html: form.detail_html || null,
         tag: form.tag || null,
         is_best: form.is_best,
+        is_sold_out: form.is_sold_out,
         shipping_note: form.shipping_note || null,
         options: form.options
           .filter((o) => o.name.trim())
@@ -760,6 +766,14 @@ function ProductDialog({
               onChange={(e) => setForm((f) => ({ ...f, is_best: e.target.checked }))}
             />
             베스트 상품으로 노출
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={form.is_sold_out}
+              onChange={(e) => setForm((f) => ({ ...f, is_sold_out: e.target.checked }))}
+            />
+            품절 처리 (주문/장바구니 버튼이 비활성화됩니다)
           </label>
           <Button type="submit" className="w-full" disabled={saveMutation.isPending}>
             {saveMutation.isPending ? "저장 중..." : "저장"}

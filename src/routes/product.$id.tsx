@@ -31,7 +31,18 @@ function ProductGallery({ product }: { product: Product }) {
   return (
     <div>
       <div className="relative aspect-square w-full overflow-hidden bg-paper">
-        <img src={current} alt={product.name} className="h-full w-full object-cover" />
+        <img
+          src={current}
+          alt={product.name}
+          className={`h-full w-full object-cover ${product.is_sold_out ? "grayscale" : ""}`}
+        />
+        {product.is_sold_out ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-ink/50">
+            <span className="border border-background px-5 py-2 text-sm font-bold tracking-[0.2em] text-background">
+              품절
+            </span>
+          </div>
+        ) : null}
         {images.length > 1 ? (
           <>
             <button
@@ -192,37 +203,45 @@ function ProductDetailPage() {
             />
           </div>
 
-          <div className="mt-6 flex gap-3">
-            <Button
-              variant="outline"
-              className="flex-1 py-6 text-sm tracking-[0.16em]"
-              onClick={() => {
-                const optionsTotal = product.options
-                  .filter((o) => optionNames.includes(o.name))
-                  .reduce((sum, o) => sum + o.extra_price, 0);
-                addItem({
-                  productId: product.id,
-                  productName: product.name,
-                  unitPrice: product.price + optionsTotal,
-                  quantity,
-                  optionNames,
-                  imageUrl: product.image_url,
-                  unit: product.unit,
-                });
-                toast.success("장바구니에 담았습니다");
-              }}
-            >
-              장바구니 담기
+          {product.is_sold_out ? (
+            <Button disabled className="mt-6 w-full py-6 text-sm tracking-[0.16em]">
+              품절된 상품입니다
             </Button>
-            <OrderDialog
-              product={product}
-              optionNames={optionNames}
-              quantity={quantity}
-              trigger={
-                <Button className="flex-1 py-6 text-sm tracking-[0.16em]">바로 주문하기</Button>
-              }
-            />
-          </div>
+          ) : (
+            <div className="mt-6 flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1 border-[#CD5C5C] py-6 text-sm tracking-[0.16em] text-[#CD5C5C] hover:bg-[#CD5C5C]/10 hover:text-[#CD5C5C]"
+                onClick={() => {
+                  const optionsTotal = product.options
+                    .filter((o) => optionNames.includes(o.name))
+                    .reduce((sum, o) => sum + o.extra_price, 0);
+                  addItem({
+                    productId: product.id,
+                    productName: product.name,
+                    unitPrice: product.price + optionsTotal,
+                    quantity,
+                    optionNames,
+                    imageUrl: product.image_url,
+                    unit: product.unit,
+                  });
+                  toast.success("장바구니에 담았습니다");
+                }}
+              >
+                장바구니 담기
+              </Button>
+              <OrderDialog
+                product={product}
+                optionNames={optionNames}
+                quantity={quantity}
+                trigger={
+                  <Button className="flex-1 bg-[#CD5C5C] py-6 text-sm tracking-[0.16em] text-white hover:bg-[#b54e4e]">
+                    바로 주문하기
+                  </Button>
+                }
+              />
+            </div>
+          )}
 
           {!product.detail_html && product.description ? (
             <div className="hairline-t mt-10 pt-8">

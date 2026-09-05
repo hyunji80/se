@@ -23,6 +23,7 @@ export type Product = {
   detail_html: string | null;
   tag: string | null;
   is_best: boolean;
+  is_sold_out: boolean;
   sort_order: number;
   created_at: string;
   options: ProductOption[];

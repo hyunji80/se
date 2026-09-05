@@ -327,7 +327,11 @@ export function OrderDialog({
                   </div>
                 ) : null}
 
-                <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                <Button
+                  type="submit"
+                  className="w-full bg-[#CD5C5C] text-white hover:bg-[#b54e4e]"
+                  disabled={form.formState.isSubmitting}
+                >
                   {form.formState.isSubmitting ? "처리 중..." : "주문 접수하기"}
                 </Button>
               </form>
