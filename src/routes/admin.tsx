@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Session } from "@supabase/supabase-js";
-import { Plus, Pencil, Trash2, LogOut, UploadCloud, X } from "lucide-react";
+import { Plus, Pencil, Trash2, LogOut, UploadCloud, X, Eye } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase, type Product, type Order } from "@/lib/supabase";
@@ -219,6 +219,11 @@ function ProductManager() {
                 <TableCell>{product.unit}</TableCell>
                 <TableCell>{product.is_best ? "O" : "-"}</TableCell>
                 <TableCell className="text-right">
+                  <Button variant="ghost" size="icon" asChild>
+                    <a href={`/product/${product.id}`} target="_blank" rel="noreferrer">
+                      <Eye className="size-4" />
+                    </a>
+                  </Button>
                   <Button variant="ghost" size="icon" onClick={() => openEdit(product)}>
                     <Pencil className="size-4" />
                   </Button>
@@ -478,7 +483,20 @@ function ProductDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{product ? "상품 수정" : "상품 추가"}</DialogTitle>
+          <DialogTitle className="flex items-center gap-3">
+            {product ? "상품 수정" : "상품 추가"}
+            {product ? (
+              <a
+                href={`/product/${product.id}`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-1 text-xs font-normal text-accent hover:underline"
+              >
+                <Eye className="size-3.5" />
+                미리보기
+              </a>
+            ) : null}
+          </DialogTitle>
         </DialogHeader>
         <form
           onSubmit={(e) => {
