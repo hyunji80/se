@@ -2,10 +2,16 @@ import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Session } from "@supabase/supabase-js";
-import { Plus, Pencil, Trash2, LogOut, UploadCloud, X, Eye } from "lucide-react";
+import { Plus, Pencil, Trash2, LogOut, UploadCloud, X, Eye, Bell } from "lucide-react";
 import { toast } from "sonner";
 
-import { supabase, type Product, type Order, type ProductOption } from "@/lib/supabase";
+import {
+  supabase,
+  type Product,
+  type Order,
+  type ProductOption,
+  type RestockRequest,
+} from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -142,6 +148,7 @@ function ProductManager() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
+  const [restockProduct, setRestockProduct] = useState<Product | null>(null);
 
   const { data: products, isLoading } = useQuery({
     queryKey: ["admin-products"],
@@ -154,6 +161,23 @@ function ProductManager() {
       return data as Product[];
     },
   });
+
+  const { data: restockRequests } = useQuery({
+    queryKey: ["admin-restock-requests"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("restock_requests")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as RestockRequest[];
+    },
+  });
+
+  const restockCounts = new Map<string, number>();
+  for (const r of restockRequests ?? []) {
+    if (r.product_id) restockCounts.set(r.product_id, (restockCounts.get(r.product_id) ?? 0) + 1);
+  }
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -199,6 +223,7 @@ function ProductManager() {
               <TableHead>단위</TableHead>
               <TableHead>베스트</TableHead>
               <TableHead>품절</TableHead>
+              <TableHead>재입고신청</TableHead>
               <TableHead className="text-right">작업</TableHead>
             </TableRow>
           </TableHeader>
@@ -220,6 +245,20 @@ function ProductManager() {
                 <TableCell>{product.unit}</TableCell>
                 <TableCell>{product.is_best ? "O" : "-"}</TableCell>
                 <TableCell>{product.is_sold_out ? "품절" : "-"}</TableCell>
+                <TableCell>
+                  {restockCounts.get(product.id) ? (
+                    <button
+                      type="button"
+                      onClick={() => setRestockProduct(product)}
+                      className="flex items-center gap-1 text-accent underline"
+                    >
+                      <Bell className="size-3.5" />
+                      {restockCounts.get(product.id)}명
+                    </button>
+                  ) : (
+                    "-"
+                  )}
+                </TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="icon" asChild>
                     <a href={`/product/${product.id}`} target="_blank" rel="noreferrer">
@@ -245,7 +284,7 @@ function ProductManager() {
             ))}
             {products?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground">
+                <TableCell colSpan={9} className="text-center text-muted-foreground">
                   등록된 상품이 없습니다
                 </TableCell>
               </TableRow>
@@ -255,7 +294,79 @@ function ProductManager() {
       )}
 
       <ProductDialog open={dialogOpen} onOpenChange={setDialogOpen} product={editing} />
+      <RestockRequestsDialog
+        product={restockProduct}
+        onOpenChange={(open) => !open && setRestockProduct(null)}
+      />
     </div>
+  );
+}
+
+function RestockRequestsDialog({
+  product,
+  onOpenChange,
+}: {
+  product: Product | null;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const queryClient = useQueryClient();
+
+  const { data: requests } = useQuery({
+    queryKey: ["restock-requests-for", product?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("restock_requests")
+        .select("*")
+        .eq("product_id", product!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as RestockRequest[];
+    },
+    enabled: !!product,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("restock_requests").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-restock-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["restock-requests-for", product?.id] });
+    },
+  });
+
+  return (
+    <Dialog open={!!product} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{product?.name} · 재입고 알림 신청자</DialogTitle>
+        </DialogHeader>
+        <div className="max-h-[50vh] space-y-2 overflow-y-auto">
+          {requests?.map((r) => (
+            <div
+              key={r.id}
+              className="hairline-b flex items-center justify-between pb-2 text-sm"
+            >
+              <span>{r.phone}</span>
+              <span className="text-xs text-muted-foreground">
+                {new Date(r.created_at).toLocaleDateString("ko-KR")}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => deleteMutation.mutate(r.id)}
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            </div>
+          ))}
+          {requests?.length === 0 ? (
+            <p className="text-sm text-muted-foreground">신청자가 없습니다</p>
+          ) : null}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

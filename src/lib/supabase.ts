@@ -30,6 +30,14 @@ export type Product = {
   shipping_note: string | null;
 };
 
+export type RestockRequest = {
+  id: string;
+  product_id: string | null;
+  product_name: string;
+  phone: string;
+  created_at: string;
+};
+
 export type Order = {
   id: string;
   product_id: string | null;

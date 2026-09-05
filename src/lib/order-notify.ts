@@ -39,6 +39,29 @@ export const notifyNewOrder = createServerFn({ method: "POST" })
     return { ok: true as const };
   });
 
+const restockNotifySchema = z.object({
+  productName: z.string().trim().min(1).max(120),
+  phone: z.string().trim().min(9, "연락처를 확인해주세요").max(20),
+});
+
+export const notifyRestockRequest = createServerFn({ method: "POST" })
+  .validator(restockNotifySchema)
+  .handler(async ({ data }) => {
+    const text = [
+      "🔔 SE 종합물산 재입고 알림 신청",
+      `상품: ${data.productName}`,
+      `연락처: ${data.phone}`,
+    ].join("\n");
+
+    try {
+      await sendKakaoMemo(text);
+    } catch (error) {
+      console.error("Kakao notify failed", error);
+    }
+
+    return { ok: true as const };
+  });
+
 const cartOrderNotifySchema = z.object({
   items: z
     .array(

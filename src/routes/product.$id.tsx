@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { supabase, type Product } from "@/lib/supabase";
 import { OrderDialog, OrderOptionsPicker } from "@/components/order-dialog";
+import { RestockDialog } from "@/components/restock-dialog";
 import { useCart } from "@/lib/cart-context";
 import { Button } from "@/components/ui/button";
 
@@ -193,20 +194,30 @@ function ProductDetailPage() {
             )}
           </div>
 
-          <div className="mt-8 border-t border-hairline pt-6">
-            <OrderOptionsPicker
-              product={product}
-              optionNames={optionNames}
-              onOptionNamesChange={setOptionNames}
-              quantity={quantity}
-              onQuantityChange={setQuantity}
-            />
-          </div>
+          {!product.is_sold_out ? (
+            <div className="mt-8 border-t border-hairline pt-6">
+              <OrderOptionsPicker
+                product={product}
+                optionNames={optionNames}
+                onOptionNamesChange={setOptionNames}
+                quantity={quantity}
+                onQuantityChange={setQuantity}
+              />
+            </div>
+          ) : null}
 
           {product.is_sold_out ? (
-            <Button disabled className="mt-6 w-full py-6 text-sm tracking-[0.16em]">
-              품절된 상품입니다
-            </Button>
+            <RestockDialog
+              product={product}
+              trigger={
+                <Button
+                  variant="outline"
+                  className="mt-6 w-full border-[#C98A92] py-6 text-sm tracking-[0.16em] text-[#C98A92] hover:bg-[#C98A92]/10 hover:text-[#C98A92]"
+                >
+                  재입고 알림 신청
+                </Button>
+              }
+            />
           ) : (
             <div className="mt-6 flex gap-3">
               <Button

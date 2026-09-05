@@ -16,6 +16,7 @@ import { toast } from "sonner";
 
 import { InquiryDialog } from "@/components/inquiry-dialog";
 import { OrderDialog } from "@/components/order-dialog";
+import { RestockDialog } from "@/components/restock-dialog";
 import { supabase, type Product } from "@/lib/supabase";
 import { useCart } from "@/lib/cart-context";
 
@@ -390,12 +391,14 @@ function Index() {
                         </span>
                       </p>
                       {item.is_sold_out ? (
-                        <button
-                          disabled
-                          className="hairline-t mt-4 w-full py-3 text-[11px] font-semibold tracking-[0.12em] text-muted-foreground"
-                        >
-                          품절된 상품입니다
-                        </button>
+                        <RestockDialog
+                          product={item}
+                          trigger={
+                            <button className="hairline-t mt-4 w-full py-3 text-[11px] font-semibold tracking-[0.12em] text-foreground/70 hover:text-[#C98A92]">
+                              재입고 알림 신청
+                            </button>
+                          }
+                        />
                       ) : (
                         <div className="hairline-t mt-4 grid grid-cols-2">
                           <button
