@@ -375,12 +375,6 @@ function Index() {
                     href="#best"
                     className="border border-background/80 px-10 py-4 text-[11px] font-semibold tracking-[0.24em] text-background transition-colors hover:bg-background hover:text-foreground"
                   >베스트 상품 보기</a>
-                  <a
-                    href="#categories"
-                    className="link-underline pb-0.5 text-[11px] font-semibold tracking-[0.24em] text-background/90"
-                  >
-                    카테고리 보기
-                  </a>
                 </div>
               </div>
             </div>
