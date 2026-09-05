@@ -292,7 +292,7 @@ function Index() {
           </div>
 
           <nav className="hidden lg:block">
-            <ul className="flex items-center gap-11 text-[12px] font-medium tracking-[0.04em]">
+            <ul className="flex items-center gap-12 text-[16px] font-semibold tracking-[0.06em]">
               {navItems.map((item, i) => (
                 <li key={item}>
                   <button
@@ -308,7 +308,7 @@ function Index() {
                       }
                     }}
                     className={`link-underline pb-1 transition-colors hover:text-foreground ${
-                      i === 0 ? "text-foreground" : "text-foreground/60"
+                      i === 0 ? "text-foreground" : "text-foreground/70"
                     }`}
                   >
                     {item}
@@ -347,7 +347,7 @@ function Index() {
       <main>
         {/* Hero — full bleed editorial */}
         <section className="relative">
-          <div className="image-zoom relative h-[78vh] min-h-[600px] w-full overflow-hidden">
+          <div className="image-zoom relative h-[47vh] min-h-[380px] w-full overflow-hidden">
             <img
               src={heroImage}
               alt="따뜻한 조명 아래 정돈되어 채워진 어두운 실내 공간의 선반"
