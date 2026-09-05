@@ -228,8 +228,12 @@ function Index() {
 
   const bestSellers = (products ?? []).filter((p) => p.is_best);
   const categoryCounts = new Map<string, number>();
+  const productsByCategory = new Map<string, Product[]>();
   for (const p of products ?? []) {
     categoryCounts.set(p.category, (categoryCounts.get(p.category) ?? 0) + 1);
+    const arr = productsByCategory.get(p.category) ?? [];
+    if (arr.length < 5) arr.push(p);
+    productsByCategory.set(p.category, arr);
   }
   const displayedProducts = selectedCategory
     ? (products ?? []).filter((p) => p.category === selectedCategory)
