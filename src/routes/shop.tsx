@@ -12,9 +12,12 @@ import {
   Building2,
 } from "lucide-react";
 
+import { toast } from "sonner";
+
 import { InquiryDialog } from "@/components/inquiry-dialog";
 import { OrderDialog } from "@/components/order-dialog";
 import { supabase, type Product } from "@/lib/supabase";
+import { useCart } from "@/lib/cart-context";
 
 import heroImage from "@/assets/hero-space-shop.jpg";
 import catElectric from "@/assets/cat-electric.jpg";
@@ -116,6 +119,7 @@ function SectionHead({
 }
 
 function Index() {
+  const { addItem, totalCount: cartCount } = useCart();
   const { data: products } = useQuery({
     queryKey: ["storefront-products"],
     queryFn: async () => {
@@ -196,12 +200,18 @@ function Index() {
             <button aria-label="찜 목록" className="hidden text-foreground/70 transition-colors hover:text-foreground sm:block">
               <Heart className="size-[17px]" strokeWidth={1} />
             </button>
-            <button aria-label="장바구니" className="relative text-foreground/70 transition-colors hover:text-foreground">
+            <Link
+              to="/cart"
+              aria-label="장바구니"
+              className="relative text-foreground/70 transition-colors hover:text-foreground"
+            >
               <ShoppingBag className="size-[17px]" strokeWidth={1} />
-              <span className="absolute -right-2.5 -top-2 min-w-4 border border-accent px-1 text-center text-[9px] font-medium leading-4 text-accent">
-                12
-              </span>
-            </button>
+              {cartCount > 0 ? (
+                <span className="absolute -right-2.5 -top-2 min-w-4 border border-accent px-1 text-center text-[9px] font-medium leading-4 text-accent">
+                  {cartCount}
+                </span>
+              ) : null}
+            </Link>
             <button aria-label="메뉴" className="text-foreground/70 lg:hidden">
               <Menu className="size-[17px]" strokeWidth={1} />
             </button>
@@ -370,14 +380,33 @@ function Index() {
                           / {item.unit}
                         </span>
                       </p>
-                      <OrderDialog
-                        product={item}
-                        trigger={
-                          <button className="hairline-t mt-4 w-full py-3 text-[11px] font-semibold tracking-[0.16em] text-foreground/70 transition-colors hover:text-accent">
-                            주문하기
-                          </button>
-                        }
-                      />
+                      <div className="hairline-t mt-4 grid grid-cols-2">
+                        <button
+                          onClick={() => {
+                            addItem({
+                              productId: item.id,
+                              productName: item.name,
+                              unitPrice: item.price,
+                              quantity: 1,
+                              optionNames: [],
+                              imageUrl: item.image_url,
+                              unit: item.unit,
+                            });
+                            toast.success("장바구니에 담았습니다");
+                          }}
+                          className="border-r border-hairline py-3 text-[11px] font-semibold tracking-[0.12em] text-foreground/70 transition-colors hover:text-accent"
+                        >
+                          장바구니
+                        </button>
+                        <OrderDialog
+                          product={item}
+                          trigger={
+                            <button className="w-full py-3 text-[11px] font-semibold tracking-[0.12em] text-foreground/70 transition-colors hover:text-accent">
+                              주문하기
+                            </button>
+                          }
+                        />
+                      </div>
                     </article>
                   );
                 })}

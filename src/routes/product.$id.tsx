@@ -1,10 +1,12 @@
 import { useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ShoppingBag } from "lucide-react";
+import { toast } from "sonner";
 
 import { supabase, type Product } from "@/lib/supabase";
 import { OrderDialog, OrderOptionsPicker } from "@/components/order-dialog";
+import { useCart } from "@/lib/cart-context";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/product/$id")({
@@ -94,6 +96,7 @@ function ProductDetailPage() {
   const { id } = Route.useParams();
   const [optionNames, setOptionNames] = useState<string[]>([]);
   const [quantity, setQuantity] = useState(1);
+  const { addItem, totalCount } = useCart();
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", id],
@@ -127,13 +130,21 @@ function ProductDetailPage() {
   return (
     <div className="min-h-screen bg-background">
       <header className="hairline-b sticky top-0 z-50 bg-background/95 px-6 py-5 backdrop-blur sm:px-8">
-        <div className="mx-auto flex max-w-[1000px] items-center gap-2">
+        <div className="mx-auto flex max-w-[1000px] items-center justify-between gap-2">
           <Link
             to="/shop"
             className="link-underline flex items-center gap-1 text-[13px] font-medium text-foreground/70 hover:text-foreground"
           >
             <ChevronLeft className="size-4" />
             전체 상품으로
+          </Link>
+          <Link to="/cart" className="relative text-foreground/70 hover:text-foreground">
+            <ShoppingBag className="size-[18px]" strokeWidth={1.25} />
+            {totalCount > 0 ? (
+              <span className="absolute -right-2.5 -top-2 min-w-4 border border-accent px-1 text-center text-[9px] font-medium leading-4 text-accent">
+                {totalCount}
+              </span>
+            ) : null}
           </Link>
         </div>
       </header>
@@ -181,14 +192,37 @@ function ProductDetailPage() {
             />
           </div>
 
-          <OrderDialog
-            product={product}
-            optionNames={optionNames}
-            quantity={quantity}
-            trigger={
-              <Button className="mt-6 w-full py-6 text-sm tracking-[0.16em]">주문하기</Button>
-            }
-          />
+          <div className="mt-6 flex gap-3">
+            <Button
+              variant="outline"
+              className="flex-1 py-6 text-sm tracking-[0.16em]"
+              onClick={() => {
+                const optionsTotal = product.options
+                  .filter((o) => optionNames.includes(o.name))
+                  .reduce((sum, o) => sum + o.extra_price, 0);
+                addItem({
+                  productId: product.id,
+                  productName: product.name,
+                  unitPrice: product.price + optionsTotal,
+                  quantity,
+                  optionNames,
+                  imageUrl: product.image_url,
+                  unit: product.unit,
+                });
+                toast.success("장바구니에 담았습니다");
+              }}
+            >
+              장바구니 담기
+            </Button>
+            <OrderDialog
+              product={product}
+              optionNames={optionNames}
+              quantity={quantity}
+              trigger={
+                <Button className="flex-1 py-6 text-sm tracking-[0.16em]">바로 주문하기</Button>
+              }
+            />
+          </div>
 
           {!product.detail_html && product.description ? (
             <div className="hairline-t mt-10 pt-8">
