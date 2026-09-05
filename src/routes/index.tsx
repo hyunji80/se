@@ -67,11 +67,10 @@ function Gate() {
           <p className="text-[11px] tracking-[0.24em] text-background/80">SE STORE</p>
         </div>
 
-        <Link
-          to="/shop"
-          className="link-underline mt-8 pb-1 text-[12px] font-semibold tracking-[0.3em] text-background"
-        >
-          ENTER
+        <Link to="/shop" className="mt-4 inline-flex p-4">
+          <span className="link-underline pb-1 text-[12px] font-semibold tracking-[0.3em] text-background">
+            ENTER
+          </span>
         </Link>
       </div>
 
