@@ -228,8 +228,12 @@ function Index() {
 
   const bestSellers = (products ?? []).filter((p) => p.is_best);
   const categoryCounts = new Map<string, number>();
+  const productsByCategory = new Map<string, Product[]>();
   for (const p of products ?? []) {
     categoryCounts.set(p.category, (categoryCounts.get(p.category) ?? 0) + 1);
+    const arr = productsByCategory.get(p.category) ?? [];
+    if (arr.length < 5) arr.push(p);
+    productsByCategory.set(p.category, arr);
   }
   const displayedProducts = selectedCategory
     ? (products ?? []).filter((p) => p.category === selectedCategory)
@@ -409,42 +413,60 @@ function Index() {
         {/* 카테고리 */}
         <section id="categories" className="mx-auto max-w-[1400px] px-6 py-28 sm:px-8">
           <SectionHead label="Departments" title="카테고리별 쇼핑" />
-          <div className="mt-10 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
-            {categories.map((cat) => (
-              <button
-                key={cat.name}
-                type="button"
-                onClick={() => goToCategory(cat.name)}
-                className="image-zoom group block text-left"
-              >
-                <div className="aspect-[4/5] w-full overflow-hidden bg-paper">
-                  <img
-                    src={cat.image}
-                    alt={cat.alt}
-                    loading="lazy"
-                    width={640}
-                    height={800}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                <div className="hairline-b mt-5 flex items-start justify-between pb-4">
-                  <div>
-                    <p className="text-[10px] font-semibold tracking-label text-accent">
-                      {cat.no}
+          <div className="mt-10 grid gap-x-6 gap-y-14 sm:grid-cols-2 lg:grid-cols-4">
+            {categories.map((cat) => {
+              const items = productsByCategory.get(cat.name) ?? [];
+              return (
+                <div key={cat.name} className="flex flex-col">
+                  <button
+                    type="button"
+                    onClick={() => goToCategory(cat.name)}
+                    className="image-zoom group block text-left"
+                  >
+                    <div className="aspect-[8/5] w-full overflow-hidden bg-paper">
+                      <img
+                        src={cat.image}
+                        alt={cat.alt}
+                        loading="lazy"
+                        width={640}
+                        height={400}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <div className="hairline-b mt-5 flex items-start justify-between pb-4">
+                      <div>
+                        <p className="text-[11px] font-semibold tracking-label text-accent">
+                          {cat.no}
+                        </p>
+                        <h3 className="font-display mt-2 text-xl font-bold">{cat.name}</h3>
+                        <p className="mt-2 text-[15px] text-muted-foreground">{cat.desc}</p>
+                      </div>
+                      <ArrowUpRight
+                        className="mt-1 size-5 text-muted-foreground transition-transform duration-500 group-hover:-translate-y-1 group-hover:translate-x-1 group-hover:text-foreground"
+                        strokeWidth={1.25}
+                      />
+                    </div>
+                    <p className="mt-3 text-[13px] font-semibold tracking-wide text-foreground/70">
+                      {categoryCounts.get(cat.name) ?? 0} 품목
                     </p>
-                    <h3 className="font-display mt-2 text-lg font-bold">{cat.name}</h3>
-                    <p className="mt-1.5 text-[13px] text-muted-foreground">{cat.desc}</p>
-                  </div>
-                  <ArrowUpRight
-                    className="mt-1 size-4 text-muted-foreground transition-transform duration-500 group-hover:-translate-y-1 group-hover:translate-x-1 group-hover:text-foreground"
-                    strokeWidth={1.25}
-                  />
+                  </button>
+
+                  <ul className="mt-4 space-y-1">
+                    {items.map((p) => (
+                      <li key={p.id}>
+                        <Link
+                          to="/product/$id"
+                          params={{ id: p.id }}
+                          className="link-underline block py-1 text-[14px] text-foreground/80 transition-colors hover:text-accent"
+                        >
+                          {p.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <p className="mt-3 text-[11px] tracking-wide text-muted-foreground">
-                  {categoryCounts.get(cat.name) ?? 0} 품목
-                </p>
-              </button>
-            ))}
+              );
+            })}
           </div>
         </section>
 
