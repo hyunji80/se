@@ -384,7 +384,7 @@ function Index() {
         </section>
 
         {/* 카테고리 */}
-        <section id="categories" className="mx-auto max-w-[1400px] px-6 py-28 sm:px-8">
+        <section id="categories" className="mx-auto max-w-[1400px] px-6 py-14 sm:px-8">
           <SectionHead label="Departments" title="카테고리별 쇼핑" />
           <div className="mt-10 grid gap-x-6 gap-y-14 sm:grid-cols-2 lg:grid-cols-4">
             {categories.map((cat) => {
@@ -444,7 +444,7 @@ function Index() {
         </section>
 
         {/* 전체 상품 */}
-        <section id="all-products" className="mx-auto max-w-[1400px] px-6 py-28 sm:px-8">
+        <section id="all-products" className="mx-auto max-w-[1400px] px-6 py-14 sm:px-8">
           <SectionHead
             label="Catalog"
             title={selectedCategory ?? "전체 상품"}
