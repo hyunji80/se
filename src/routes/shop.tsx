@@ -16,7 +16,6 @@ import {
 import { toast } from "sonner";
 
 import { InquiryDialog } from "@/components/inquiry-dialog";
-import { ShippingPolicyDialog } from "@/components/shipping-policy-dialog";
 import { OrderDialog } from "@/components/order-dialog";
 import { RestockDialog } from "@/components/restock-dialog";
 import { supabase, type Product } from "@/lib/supabase";
@@ -525,16 +524,12 @@ function Index() {
                   />
                 ) : null}
                 {s.title === "배송·반품 규정안내" ? (
-                  <ShippingPolicyDialog
-                    trigger={
-                      <button
-                        type="button"
-                        className="link-underline mt-4 text-[11px] font-semibold tracking-[0.16em] text-accent"
-                      >
-                        자세히 보기
-                      </button>
-                    }
-                  />
+                  <Link
+                    to="/shipping-policy"
+                    className="link-underline mt-4 inline-block text-[11px] font-semibold tracking-[0.16em] text-accent"
+                  >
+                    자세히 보기
+                  </Link>
                 ) : null}
               </div>
             ))}
@@ -583,7 +578,9 @@ function Index() {
             </div>
             <div className="flex flex-wrap gap-x-8 gap-y-3 text-[13px] text-muted-foreground">
               <a href="#" className="link-underline hover:text-foreground">회사소개</a>
-              <a href="#" className="link-underline hover:text-foreground">배송·반품</a>
+              <Link to="/shipping-policy" className="link-underline hover:text-foreground">
+                배송·반품
+              </Link>
               <InquiryDialog
                 trigger={
                   <button type="button" className="link-underline hover:text-foreground">
