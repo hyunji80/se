@@ -365,23 +365,20 @@ function Index() {
                 <p className="text-[10px] font-semibold uppercase tracking-[0.4em] text-background/70">
                   The Filled Space
                 </p>
-                <h1 className="font-display mt-8 text-4xl font-bold leading-[1.4] tracking-tight sm:text-6xl">
-                  공간을 채우는
-                  <br />
-                  모든 것
+                <h1 className="font-display mt-8 text-4xl font-bold tracking-tight sm:text-6xl">
+                  공간을 채우는 모든 것
                 </h1>
-                <p className="mx-auto mt-8 max-w-lg text-[13px] leading-loose text-background/80">
-                  스위치와 콘센트부터 위생 장갑, 청소·사무·포장 용품까지.
-                  비어 있는 자리를 채우는 일상의 모든 소모품.
+                <p className="mx-auto mt-8 max-w-xl text-[13px] leading-loose text-background/80">
+                  스위치와 콘센트부터 위생·청소·사무·포장 용품까지, 일상의 모든 소모품.
                 </p>
                 <div className="mt-12 flex items-center justify-center gap-5">
                   <a
                     href="#best"
-                    className="border border-background/80 px-10 py-4 text-[11px] font-semibold tracking-[0.24em] text-background transition-colors hover:bg-background hover:text-foreground"
+                    className="border border-background/80 px-10 py-4 text-[14px] font-semibold tracking-[0.24em] text-background transition-colors hover:bg-background hover:text-foreground"
                   >베스트 상품 보기</a>
                   <a
                     href="#categories"
-                    className="link-underline pb-0.5 text-[11px] font-semibold tracking-[0.24em] text-background/90"
+                    className="link-underline pb-0.5 text-[13px] font-semibold tracking-[0.24em] text-background/90"
                   >
                     카테고리 보기
                   </a>
@@ -390,24 +387,6 @@ function Index() {
             </div>
           </div>
 
-          {/* Stat strip */}
-          <div className="hairline-b">
-            <div className="mx-auto grid max-w-[1400px] grid-cols-3 px-6 sm:px-8">
-              {[
-                { v: "2,400+", l: "동시 재고 품목" },
-                { v: "8", l: "전문 카테고리" },
-                { v: "24h", l: "이내 출고" },
-              ].map((s, i) => (
-                <div
-                  key={s.l}
-                  className={`py-10 text-center ${i > 0 ? "border-l border-hairline" : ""}`}
-                >
-                  <p className="font-display text-3xl font-bold sm:text-[32px]">{s.v}</p>
-                  <p className="mt-2.5 text-[10px] tracking-[0.18em] text-muted-foreground">{s.l}</p>
-                </div>
-              ))}
-            </div>
-          </div>
         </section>
 
         {/* 카테고리 */}
