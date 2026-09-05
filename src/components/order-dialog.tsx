@@ -100,9 +100,11 @@ export function OrderOptionsPicker({
         />
       </div>
 
-      <div className="hairline-t flex items-center justify-between pt-3 text-sm">
-        <span className="text-muted-foreground">{product.shipping_note ?? "배송비 안내 없음"}</span>
-        <span className="font-bold">총 금액 ₩{total.toLocaleString()}</span>
+      <div className="hairline-t flex items-center justify-between pt-3">
+        <span className="text-sm text-muted-foreground">
+          {product.shipping_note ?? "배송비 안내 없음"}
+        </span>
+        <span className="text-2xl font-bold">총 금액 ₩{total.toLocaleString()}</span>
       </div>
     </div>
   );

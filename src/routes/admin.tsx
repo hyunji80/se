@@ -47,6 +47,10 @@ const CATEGORIES = ["전기자재", "위생·청소", "사무·포장", "생활�
 const DEFAULT_CATEGORY: string = CATEGORIES[0];
 const ORDER_STATUSES = ["입금대기", "입금확인", "발송완료", "취소"] as const;
 
+function formatThousands(digits: string) {
+  return digits ? Number(digits).toLocaleString() : "";
+}
+
 function AdminPage() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
 
@@ -672,9 +676,12 @@ function ProductDialog({
             <div className="space-y-2">
               <Label>판매가 (원)</Label>
               <Input
-                type="number"
-                value={form.price}
-                onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
+                type="text"
+                inputMode="numeric"
+                value={formatThousands(form.price)}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, price: e.target.value.replace(/[^0-9]/g, "") }))
+                }
                 required
               />
             </div>
@@ -690,9 +697,12 @@ function ProductDialog({
           <div className="space-y-2">
             <Label>정가 (할인 전 가격, 선택 — 판매가보다 높을 때만 할인으로 표시됩니다)</Label>
             <Input
-              type="number"
-              value={form.original_price}
-              onChange={(e) => setForm((f) => ({ ...f, original_price: e.target.value }))}
+              type="text"
+              inputMode="numeric"
+              value={formatThousands(form.original_price)}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, original_price: e.target.value.replace(/[^0-9]/g, "") }))
+              }
             />
           </div>
           <div className="space-y-2">
@@ -723,18 +733,20 @@ function ProductDialog({
                     }
                   />
                   <Input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     className="w-32"
                     placeholder="추가금액"
-                    value={opt.extra_price}
-                    onChange={(e) =>
+                    value={formatThousands(opt.extra_price)}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/[^0-9]/g, "");
                       setForm((f) => ({
                         ...f,
                         options: f.options.map((o, oi) =>
-                          oi === i ? { ...o, extra_price: e.target.value } : o,
+                          oi === i ? { ...o, extra_price: digits } : o,
                         ),
-                      }))
-                    }
+                      }));
+                    }}
                   />
                   <Button
                     type="button"
