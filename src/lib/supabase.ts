@@ -18,6 +18,7 @@ export type Product = {
   original_price: number | null;
   unit: string;
   image_url: string | null;
+  image_urls: string[];
   description: string | null;
   detail_html: string | null;
   tag: string | null;
@@ -35,6 +36,8 @@ export type Order = {
   unit_price: number;
   quantity: number;
   option_name: string | null;
+  delivery_method: string | null;
+  group_id: string | null;
   buyer_name: string;
   buyer_phone: string;
   status: string;

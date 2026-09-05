@@ -6,6 +6,7 @@ import { sendKakaoMemo } from "@/lib/kakao";
 const orderNotifySchema = z.object({
   productName: z.string().trim().min(1).max(120),
   optionName: z.string().trim().max(120).optional(),
+  deliveryMethod: z.string().trim().max(20).optional(),
   quantity: z.number().int().min(1),
   unitPrice: z.number().int().min(0),
   buyerName: z.string().trim().min(1, "이름을 입력해주세요").max(50),
@@ -20,6 +21,7 @@ export const notifyNewOrder = createServerFn({ method: "POST" })
       "🛒 SE 종합물산 새 주문 (무통장입금 대기)",
       `상품: ${data.productName}`,
       data.optionName ? `옵션: ${data.optionName}` : null,
+      data.deliveryMethod ? `배송방법: ${data.deliveryMethod}` : null,
       `수량: ${data.quantity}`,
       `금액: ${total.toLocaleString()}원`,
       `주문자: ${data.buyerName}`,

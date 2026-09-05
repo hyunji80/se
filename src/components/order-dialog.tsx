@@ -28,50 +28,137 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 
-const orderFormSchema = z.object({
+export const DELIVERY_METHODS = ["택배", "퀵서비스", "방문수령"] as const;
+
+const buyerFormSchema = z.object({
   buyerName: z.string().trim().min(1, "이름을 입력해주세요").max(50),
   buyerPhone: z.string().trim().min(9, "연락처를 확인해주세요").max(20),
-  quantity: z.coerce.number().int().min(1, "1개 이상 입력해주세요"),
-  optionNames: z.array(z.string()),
 });
 
-type OrderFormValues = z.infer<typeof orderFormSchema>;
+type BuyerFormValues = z.infer<typeof buyerFormSchema>;
 
-export function OrderDialog({ product, trigger }: { product: Product; trigger: React.ReactNode }) {
+/** 옵션 체크박스 + 수량 + 실시간 합계. 상세페이지에 바로 보여줄 때, 또는 다이얼로그 안에서 쓰입니다. */
+export function OrderOptionsPicker({
+  product,
+  optionNames,
+  onOptionNamesChange,
+  quantity,
+  onQuantityChange,
+}: {
+  product: Product;
+  optionNames: string[];
+  onOptionNamesChange: (names: string[]) => void;
+  quantity: number;
+  onQuantityChange: (quantity: number) => void;
+}) {
+  const optionsTotal = product.options
+    .filter((o) => optionNames.includes(o.name))
+    .reduce((sum, o) => sum + o.extra_price, 0);
+  const total = (product.price + optionsTotal) * quantity;
+
+  return (
+    <div className="space-y-4">
+      {product.options.length > 0 ? (
+        <div>
+          <p className="mb-2 text-sm font-medium">추가 옵션</p>
+          <div className="space-y-2 border border-hairline p-3">
+            {product.options.map((o) => (
+              <label
+                key={o.name}
+                className="flex cursor-pointer items-center justify-between text-sm"
+              >
+                <span className="flex items-center gap-2">
+                  <Checkbox
+                    checked={optionNames.includes(o.name)}
+                    onCheckedChange={(checked) =>
+                      onOptionNamesChange(
+                        checked
+                          ? [...optionNames, o.name]
+                          : optionNames.filter((n) => n !== o.name),
+                      )
+                    }
+                  />
+                  {o.name}
+                </span>
+                {o.extra_price ? (
+                  <span className="text-muted-foreground">+{o.extra_price.toLocaleString()}원</span>
+                ) : null}
+              </label>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium">수량</span>
+        <Input
+          type="number"
+          min={1}
+          value={quantity}
+          onChange={(e) => onQuantityChange(Math.max(1, Number(e.target.value) || 1))}
+          className="w-24"
+        />
+      </div>
+
+      <div className="hairline-t flex items-center justify-between pt-3 text-sm">
+        <span className="text-muted-foreground">{product.shipping_note ?? "배송비 안내 없음"}</span>
+        <span className="font-bold">총 금액 ₩{total.toLocaleString()}</span>
+      </div>
+    </div>
+  );
+}
+
+export function OrderDialog({
+  product,
+  trigger,
+  optionNames,
+  quantity,
+}: {
+  product: Product;
+  trigger: React.ReactNode;
+  /** 넘기지 않으면 다이얼로그 안에서 옵션/수량을 자체적으로 물어봅니다 (카드 등 컴팩트한 곳에서 사용). */
+  optionNames?: string[];
+  quantity?: number;
+}) {
   const [open, setOpen] = useState(false);
   const [placedOrder, setPlacedOrder] = useState<{
     quantity: number;
     total: number;
     optionNames: string[];
   } | null>(null);
+  const [deliveryMethod, setDeliveryMethod] = useState<string>(DELIVERY_METHODS[0]);
 
-  const form = useForm<OrderFormValues>({
-    resolver: zodResolver(orderFormSchema),
-    defaultValues: { buyerName: "", buyerPhone: "", quantity: 1, optionNames: [] },
+  const isControlled = optionNames !== undefined && quantity !== undefined;
+  const [internalOptionNames, setInternalOptionNames] = useState<string[]>([]);
+  const [internalQuantity, setInternalQuantity] = useState(1);
+
+  const effectiveOptionNames = isControlled ? optionNames : internalOptionNames;
+  const effectiveQuantity = isControlled ? quantity : internalQuantity;
+
+  const form = useForm<BuyerFormValues>({
+    resolver: zodResolver(buyerFormSchema),
+    defaultValues: { buyerName: "", buyerPhone: "" },
   });
 
-  const selectedOptionNames = form.watch("optionNames");
-  const quantity = form.watch("quantity") || 1;
-  const optionsTotal = product.options
-    .filter((o) => selectedOptionNames.includes(o.name))
-    .reduce((sum, o) => sum + o.extra_price, 0);
-  const unitPrice = product.price + optionsTotal;
-  const liveTotal = unitPrice * quantity;
-
-  async function onSubmit(values: OrderFormValues) {
-    const optionsSum = product.options
-      .filter((o) => values.optionNames.includes(o.name))
+  function unitPrice() {
+    const optionsTotal = product.options
+      .filter((o) => effectiveOptionNames.includes(o.name))
       .reduce((sum, o) => sum + o.extra_price, 0);
-    const finalUnitPrice = product.price + optionsSum;
-    const optionLabel = values.optionNames.join(", ") || null;
+    return product.price + optionsTotal;
+  }
+
+  async function onSubmit(values: BuyerFormValues) {
+    const finalUnitPrice = unitPrice();
+    const optionLabel = effectiveOptionNames.join(", ") || null;
 
     try {
       const { error } = await supabase.from("orders").insert({
         product_id: product.id,
         product_name: product.name,
         unit_price: finalUnitPrice,
-        quantity: values.quantity,
+        quantity: effectiveQuantity,
         option_name: optionLabel,
+        delivery_method: deliveryMethod,
         buyer_name: values.buyerName,
         buyer_phone: values.buyerPhone,
       });
@@ -81,7 +168,8 @@ export function OrderDialog({ product, trigger }: { product: Product; trigger: R
         data: {
           productName: product.name,
           optionName: optionLabel ?? undefined,
-          quantity: values.quantity,
+          deliveryMethod,
+          quantity: effectiveQuantity,
           unitPrice: finalUnitPrice,
           buyerName: values.buyerName,
           buyerPhone: values.buyerPhone,
@@ -89,9 +177,9 @@ export function OrderDialog({ product, trigger }: { product: Product; trigger: R
       });
 
       setPlacedOrder({
-        quantity: values.quantity,
-        total: finalUnitPrice * values.quantity,
-        optionNames: values.optionNames,
+        quantity: effectiveQuantity,
+        total: finalUnitPrice * effectiveQuantity,
+        optionNames: effectiveOptionNames,
       });
     } catch (error) {
       console.error(error);
@@ -104,6 +192,9 @@ export function OrderDialog({ product, trigger }: { product: Product; trigger: R
     if (!next) {
       form.reset();
       setPlacedOrder(null);
+      setInternalOptionNames([]);
+      setInternalQuantity(1);
+      setDeliveryMethod(DELIVERY_METHODS[0]);
     }
   }
 
@@ -115,7 +206,7 @@ export function OrderDialog({ product, trigger }: { product: Product; trigger: R
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-md">
         {placedOrder ? (
           <>
             <DialogHeader>
@@ -138,6 +229,10 @@ export function OrderDialog({ product, trigger }: { product: Product; trigger: R
               <div className="flex justify-between">
                 <span className="text-muted-foreground">수량</span>
                 <span className="font-medium">{placedOrder.quantity}개</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">배송방법</span>
+                <span className="font-medium">{deliveryMethod}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">입금 금액</span>
@@ -169,47 +264,36 @@ export function OrderDialog({ product, trigger }: { product: Product; trigger: R
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                {product.options.length > 0 ? (
-                  <FormField
-                    control={form.control}
-                    name="optionNames"
-                    render={() => (
-                      <FormItem>
-                        <FormLabel>추가 옵션</FormLabel>
-                        <div className="space-y-2 border border-hairline p-3">
-                          {product.options.map((o) => (
-                            <label
-                              key={o.name}
-                              className="flex cursor-pointer items-center justify-between text-sm"
-                            >
-                              <span className="flex items-center gap-2">
-                                <Checkbox
-                                  checked={selectedOptionNames.includes(o.name)}
-                                  onCheckedChange={(checked) => {
-                                    const current = form.getValues("optionNames");
-                                    form.setValue(
-                                      "optionNames",
-                                      checked
-                                        ? [...current, o.name]
-                                        : current.filter((n) => n !== o.name),
-                                    );
-                                  }}
-                                />
-                                {o.name}
-                              </span>
-                              {o.extra_price ? (
-                                <span className="text-muted-foreground">
-                                  +{o.extra_price.toLocaleString()}원
-                                </span>
-                              ) : null}
-                            </label>
-                          ))}
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                {!isControlled ? (
+                  <OrderOptionsPicker
+                    product={product}
+                    optionNames={internalOptionNames}
+                    onOptionNamesChange={setInternalOptionNames}
+                    quantity={internalQuantity}
+                    onQuantityChange={setInternalQuantity}
                   />
                 ) : null}
+
+                <div>
+                  <p className="mb-2 text-sm font-medium">배송방법</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {DELIVERY_METHODS.map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => setDeliveryMethod(m)}
+                        className={`border px-2 py-2 text-xs font-medium transition-colors ${
+                          deliveryMethod === m
+                            ? "border-foreground bg-foreground text-background"
+                            : "border-hairline text-foreground/70 hover:border-foreground"
+                        }`}
+                      >
+                        {m}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <FormField
                   control={form.control}
                   name="buyerName"
@@ -236,27 +320,13 @@ export function OrderDialog({ product, trigger }: { product: Product; trigger: R
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="quantity"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>수량</FormLabel>
-                      <FormControl>
-                        <Input type="number" min={1} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="hairline-t flex items-center justify-between pt-3 text-sm">
-                  <span className="text-muted-foreground">
-                    {product.shipping_note ?? "배송비 안내 없음"}
-                  </span>
-                  <span className="font-bold">
-                    총 금액 ₩{liveTotal.toLocaleString()}
-                  </span>
-                </div>
+
+                {isControlled ? (
+                  <div className="hairline-t pt-3 text-right text-sm font-bold">
+                    총 금액 ₩{(unitPrice() * effectiveQuantity).toLocaleString()}
+                  </div>
+                ) : null}
+
                 <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
                   {form.formState.isSubmitting ? "처리 중..." : "주문 접수하기"}
                 </Button>

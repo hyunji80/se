@@ -307,6 +307,7 @@ function OrderManager() {
               <TableHead>주문일시</TableHead>
               <TableHead>상품</TableHead>
               <TableHead>옵션</TableHead>
+              <TableHead>배송방법</TableHead>
               <TableHead>수량</TableHead>
               <TableHead>금액</TableHead>
               <TableHead>주문자</TableHead>
@@ -321,6 +322,7 @@ function OrderManager() {
                 <TableCell>{new Date(order.created_at).toLocaleString("ko-KR")}</TableCell>
                 <TableCell>{order.product_name}</TableCell>
                 <TableCell>{order.option_name ?? "-"}</TableCell>
+                <TableCell>{order.delivery_method ?? "-"}</TableCell>
                 <TableCell>{order.quantity}</TableCell>
                 <TableCell>₩{(order.unit_price * order.quantity).toLocaleString()}</TableCell>
                 <TableCell>{order.buyer_name}</TableCell>
@@ -359,7 +361,7 @@ function OrderManager() {
             ))}
             {orders?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={9} className="text-center text-muted-foreground">
+                <TableCell colSpan={10} className="text-center text-muted-foreground">
                   접수된 주문이 없습니다
                 </TableCell>
               </TableRow>
@@ -388,7 +390,7 @@ function ProductDialog({
     price: "",
     original_price: "",
     unit: "개",
-    image_url: "",
+    images: [] as string[],
     description: "",
     detail_html: "",
     tag: "",
@@ -405,7 +407,9 @@ function ProductDialog({
         price: String(product.price),
         original_price: product.original_price != null ? String(product.original_price) : "",
         unit: product.unit,
-        image_url: product.image_url ?? "",
+        images: [product.image_url, ...(product.image_urls ?? [])].filter(
+          (u): u is string => !!u,
+        ),
         description: product.description ?? "",
         detail_html: product.detail_html ?? "",
         tag: product.tag ?? "",
@@ -423,7 +427,7 @@ function ProductDialog({
         price: "",
         original_price: "",
         unit: "개",
-        image_url: "",
+        images: [],
         description: "",
         detail_html: "",
         tag: "",
@@ -445,7 +449,7 @@ function ProductDialog({
       const { error } = await supabase.storage.from("product-images").upload(path, file);
       if (error) throw error;
       const { data } = supabase.storage.from("product-images").getPublicUrl(path);
-      setForm((f) => ({ ...f, image_url: data.publicUrl }));
+      setForm((f) => ({ ...f, images: [...f.images, data.publicUrl] }));
     } catch (error) {
       toast.error("이미지 업로드 실패: " + (error as Error).message);
     } finally {
@@ -471,7 +475,8 @@ function ProductDialog({
         price: Number(form.price),
         original_price: form.original_price ? Number(form.original_price) : null,
         unit: form.unit,
-        image_url: form.image_url || null,
+        image_url: form.images[0] || null,
+        image_urls: form.images.slice(1),
         description: form.description || null,
         detail_html: form.detail_html || null,
         tag: form.tag || null,
@@ -646,42 +651,58 @@ function ProductDialog({
             </div>
           </div>
           <div className="space-y-2">
-            <Label>상품 이미지 (선택)</Label>
-            {form.image_url ? (
-              <div className="relative w-fit">
-                <img src={form.image_url} alt="" className="h-32 w-32 object-cover" />
-                <button
-                  type="button"
-                  onClick={() => setForm((f) => ({ ...f, image_url: "" }))}
-                  className="absolute -right-2 -top-2 rounded-full bg-foreground p-1 text-background"
-                >
-                  <X className="size-3" />
-                </button>
+            <Label>
+              상품 이미지 (선택 — 여러 장 업로드 가능. 첫 번째 사진이 목록 대표 이미지로 쓰입니다)
+            </Label>
+            {form.images.length > 0 ? (
+              <div className="flex flex-wrap gap-3">
+                {form.images.map((url, i) => (
+                  <div key={url} className="relative">
+                    <img
+                      src={url}
+                      alt=""
+                      className={`size-24 object-cover ${i === 0 ? "ring-2 ring-accent" : ""}`}
+                    />
+                    {i === 0 ? (
+                      <span className="absolute bottom-0 left-0 bg-accent px-1 text-[9px] font-bold text-accent-foreground">
+                        대표
+                      </span>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setForm((f) => ({ ...f, images: f.images.filter((_, oi) => oi !== i) }))
+                      }
+                      className="absolute -right-2 -top-2 rounded-full bg-foreground p-1 text-background"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </div>
+                ))}
               </div>
-            ) : (
-              <label
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  const file = e.dataTransfer.files[0];
-                  if (file) handleFile(file);
+            ) : null}
+            <label
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                [...e.dataTransfer.files].forEach(handleFile);
+              }}
+              className="flex h-24 w-full cursor-pointer flex-col items-center justify-center gap-2 border border-dashed border-hairline text-sm text-muted-foreground hover:border-foreground"
+            >
+              <UploadCloud className="size-5" />
+              {uploading ? "업로드 중..." : "클릭하거나 이미지를 끌어다 놓으세요 (여러 장 선택 가능)"}
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                disabled={uploading}
+                onChange={(e) => {
+                  [...(e.target.files ?? [])].forEach(handleFile);
+                  e.target.value = "";
                 }}
-                className="flex h-32 w-full cursor-pointer flex-col items-center justify-center gap-2 border border-dashed border-hairline text-sm text-muted-foreground hover:border-foreground"
-              >
-                <UploadCloud className="size-5" />
-                {uploading ? "업로드 중..." : "클릭하거나 이미지를 끌어다 놓으세요"}
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  disabled={uploading}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handleFile(file);
-                  }}
-                />
-              </label>
-            )}
+              />
+            </label>
           </div>
           <div className="space-y-2">
             <Label>상세 설명 (선택 — 짧은 줄글, 아래 커스텀 페이지가 없을 때만 표시됩니다)</Label>
