@@ -248,7 +248,7 @@ function CartPage() {
                 />
                 <Button
                   type="submit"
-                  className="w-full bg-[#CD5C5C] py-6 text-sm tracking-[0.16em] text-white hover:bg-[#b54e4e]"
+                  className="w-full bg-[#C98A92] py-6 text-sm tracking-[0.16em] text-white hover:bg-[#b8747d]"
                   disabled={form.formState.isSubmitting}
                 >
                   {form.formState.isSubmitting ? "처리 중..." : "주문 접수하기"}

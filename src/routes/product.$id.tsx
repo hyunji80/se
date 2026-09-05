@@ -211,7 +211,7 @@ function ProductDetailPage() {
             <div className="mt-6 flex gap-3">
               <Button
                 variant="outline"
-                className="flex-1 border-[#CD5C5C] py-6 text-sm tracking-[0.16em] text-[#CD5C5C] hover:bg-[#CD5C5C]/10 hover:text-[#CD5C5C]"
+                className="flex-1 border-[#C98A92] py-6 text-sm tracking-[0.16em] text-[#C98A92] hover:bg-[#C98A92]/10 hover:text-[#C98A92]"
                 onClick={() => {
                   const optionsTotal = product.options
                     .filter((o) => optionNames.includes(o.name))
@@ -235,7 +235,7 @@ function ProductDetailPage() {
                 optionNames={optionNames}
                 quantity={quantity}
                 trigger={
-                  <Button className="flex-1 bg-[#CD5C5C] py-6 text-sm tracking-[0.16em] text-white hover:bg-[#b54e4e]">
+                  <Button className="flex-1 bg-[#C98A92] py-6 text-sm tracking-[0.16em] text-white hover:bg-[#b8747d]">
                     바로 주문하기
                   </Button>
                 }

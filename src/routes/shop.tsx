@@ -418,7 +418,7 @@ function Index() {
                           <OrderDialog
                             product={item}
                             trigger={
-                              <button className="w-full py-3 text-[11px] font-semibold tracking-[0.12em] text-foreground/70 transition-colors hover:text-[#CD5C5C]">
+                              <button className="w-full py-3 text-[11px] font-semibold tracking-[0.12em] text-foreground/70 transition-colors hover:text-[#C98A92]">
                                 주문하기
                               </button>
                             }
