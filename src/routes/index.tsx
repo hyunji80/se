@@ -25,7 +25,7 @@ export const Route = createFileRoute("/")({
 
 function Gate() {
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-ink">
+    <div className="relative h-dvh w-full overflow-hidden bg-ink">
       <img
         src={spaceHero}
         alt="저녁 빛이 스며든 정돈된 실내 공간과 물품이 채워진 선반"
@@ -67,7 +67,7 @@ function Gate() {
           <p className="text-[11px] tracking-[0.24em] text-background/80">SE STORE</p>
         </div>
 
-        <Link to="/shop" className="mt-4 inline-flex p-4">
+        <Link to="/shop" className="mt-4 inline-flex touch-manipulation p-4">
           <span className="link-underline pb-1 text-[12px] font-semibold tracking-[0.3em] text-background">
             ENTER
           </span>
