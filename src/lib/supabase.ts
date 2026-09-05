@@ -5,6 +5,11 @@ const supabaseKey = import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] as string;
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
+export type ProductOption = {
+  name: string;
+  extra_price: number;
+};
+
 export type Product = {
   id: string;
   category: string;
@@ -19,6 +24,8 @@ export type Product = {
   is_best: boolean;
   sort_order: number;
   created_at: string;
+  options: ProductOption[];
+  shipping_note: string | null;
 };
 
 export type Order = {
@@ -27,6 +34,7 @@ export type Order = {
   product_name: string;
   unit_price: number;
   quantity: number;
+  option_name: string | null;
   buyer_name: string;
   buyer_phone: string;
   status: string;

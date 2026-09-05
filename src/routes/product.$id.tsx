@@ -117,6 +117,10 @@ function ProductDetailPage() {
             )}
           </div>
 
+          {product.shipping_note ? (
+            <p className="mt-3 text-xs text-muted-foreground">배송비: {product.shipping_note}</p>
+          ) : null}
+
           <OrderDialog
             product={product}
             trigger={

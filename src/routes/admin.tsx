@@ -5,7 +5,7 @@ import type { Session } from "@supabase/supabase-js";
 import { Plus, Pencil, Trash2, LogOut, UploadCloud, X, Eye } from "lucide-react";
 import { toast } from "sonner";
 
-import { supabase, type Product, type Order } from "@/lib/supabase";
+import { supabase, type Product, type Order, type ProductOption } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -306,6 +306,7 @@ function OrderManager() {
             <TableRow>
               <TableHead>주문일시</TableHead>
               <TableHead>상품</TableHead>
+              <TableHead>옵션</TableHead>
               <TableHead>수량</TableHead>
               <TableHead>금액</TableHead>
               <TableHead>주문자</TableHead>
@@ -319,6 +320,7 @@ function OrderManager() {
               <TableRow key={order.id}>
                 <TableCell>{new Date(order.created_at).toLocaleString("ko-KR")}</TableCell>
                 <TableCell>{order.product_name}</TableCell>
+                <TableCell>{order.option_name ?? "-"}</TableCell>
                 <TableCell>{order.quantity}</TableCell>
                 <TableCell>₩{(order.unit_price * order.quantity).toLocaleString()}</TableCell>
                 <TableCell>{order.buyer_name}</TableCell>
@@ -357,7 +359,7 @@ function OrderManager() {
             ))}
             {orders?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground">
+                <TableCell colSpan={9} className="text-center text-muted-foreground">
                   접수된 주문이 없습니다
                 </TableCell>
               </TableRow>
@@ -391,6 +393,8 @@ function ProductDialog({
     detail_html: "",
     tag: "",
     is_best: false,
+    shipping_note: "",
+    options: [] as { name: string; extra_price: string }[],
   });
 
   useEffect(() => {
@@ -406,6 +410,11 @@ function ProductDialog({
         detail_html: product.detail_html ?? "",
         tag: product.tag ?? "",
         is_best: product.is_best,
+        shipping_note: product.shipping_note ?? "",
+        options: (product.options ?? []).map((o) => ({
+          name: o.name,
+          extra_price: String(o.extra_price),
+        })),
       });
     } else {
       setForm({
@@ -419,6 +428,8 @@ function ProductDialog({
         detail_html: "",
         tag: "",
         is_best: false,
+        shipping_note: "",
+        options: [],
       });
     }
   }, [product, open]);
@@ -465,6 +476,10 @@ function ProductDialog({
         detail_html: form.detail_html || null,
         tag: form.tag || null,
         is_best: form.is_best,
+        shipping_note: form.shipping_note || null,
+        options: form.options
+          .filter((o) => o.name.trim())
+          .map((o) => ({ name: o.name.trim(), extra_price: Number(o.extra_price) || 0 })),
       };
       const { error } = product
         ? await supabase.from("products").update(payload).eq("id", product.id)
@@ -557,6 +572,78 @@ function ProductDialog({
               value={form.original_price}
               onChange={(e) => setForm((f) => ({ ...f, original_price: e.target.value }))}
             />
+          </div>
+          <div className="space-y-2">
+            <Label>배송비 안내문구 (선택, 예: 배송비 3,000원 별도 / 무료배송)</Label>
+            <Input
+              value={form.shipping_note}
+              onChange={(e) => setForm((f) => ({ ...f, shipping_note: e.target.value }))}
+              placeholder="무료배송"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>
+              옵션 (선택 — 예: 부자재 추가, 콘센트 시공 요청 등. 추가 금액이 있으면 판매가에 더해집니다)
+            </Label>
+            <div className="space-y-2">
+              {form.options.map((opt, i) => (
+                <div key={i} className="flex gap-2">
+                  <Input
+                    placeholder="옵션명 (예: 시공 요청)"
+                    value={opt.name}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        options: f.options.map((o, oi) =>
+                          oi === i ? { ...o, name: e.target.value } : o,
+                        ),
+                      }))
+                    }
+                  />
+                  <Input
+                    type="number"
+                    className="w-32"
+                    placeholder="추가금액"
+                    value={opt.extra_price}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        options: f.options.map((o, oi) =>
+                          oi === i ? { ...o, extra_price: e.target.value } : o,
+                        ),
+                      }))
+                    }
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() =>
+                      setForm((f) => ({
+                        ...f,
+                        options: f.options.filter((_, oi) => oi !== i),
+                      }))
+                    }
+                  >
+                    <X className="size-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setForm((f) => ({
+                    ...f,
+                    options: [...f.options, { name: "", extra_price: "0" }],
+                  }))
+                }
+              >
+                <Plus className="mr-1.5 size-3.5" />
+                옵션 추가
+              </Button>
+            </div>
           </div>
           <div className="space-y-2">
             <Label>상품 이미지 (선택)</Label>

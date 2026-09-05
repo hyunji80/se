@@ -26,31 +26,52 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const orderFormSchema = z.object({
   buyerName: z.string().trim().min(1, "이름을 입력해주세요").max(50),
   buyerPhone: z.string().trim().min(9, "연락처를 확인해주세요").max(20),
   quantity: z.coerce.number().int().min(1, "1개 이상 입력해주세요"),
+  optionNames: z.array(z.string()),
 });
 
 type OrderFormValues = z.infer<typeof orderFormSchema>;
 
 export function OrderDialog({ product, trigger }: { product: Product; trigger: React.ReactNode }) {
   const [open, setOpen] = useState(false);
-  const [placedOrder, setPlacedOrder] = useState<{ quantity: number; total: number } | null>(null);
+  const [placedOrder, setPlacedOrder] = useState<{
+    quantity: number;
+    total: number;
+    optionNames: string[];
+  } | null>(null);
 
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(orderFormSchema),
-    defaultValues: { buyerName: "", buyerPhone: "", quantity: 1 },
+    defaultValues: { buyerName: "", buyerPhone: "", quantity: 1, optionNames: [] },
   });
 
+  const selectedOptionNames = form.watch("optionNames");
+  const quantity = form.watch("quantity") || 1;
+  const optionsTotal = product.options
+    .filter((o) => selectedOptionNames.includes(o.name))
+    .reduce((sum, o) => sum + o.extra_price, 0);
+  const unitPrice = product.price + optionsTotal;
+  const liveTotal = unitPrice * quantity;
+
   async function onSubmit(values: OrderFormValues) {
+    const optionsSum = product.options
+      .filter((o) => values.optionNames.includes(o.name))
+      .reduce((sum, o) => sum + o.extra_price, 0);
+    const finalUnitPrice = product.price + optionsSum;
+    const optionLabel = values.optionNames.join(", ") || null;
+
     try {
       const { error } = await supabase.from("orders").insert({
         product_id: product.id,
         product_name: product.name,
-        unit_price: product.price,
+        unit_price: finalUnitPrice,
         quantity: values.quantity,
+        option_name: optionLabel,
         buyer_name: values.buyerName,
         buyer_phone: values.buyerPhone,
       });
@@ -59,14 +80,19 @@ export function OrderDialog({ product, trigger }: { product: Product; trigger: R
       await notifyNewOrder({
         data: {
           productName: product.name,
+          optionName: optionLabel ?? undefined,
           quantity: values.quantity,
-          unitPrice: product.price,
+          unitPrice: finalUnitPrice,
           buyerName: values.buyerName,
           buyerPhone: values.buyerPhone,
         },
       });
 
-      setPlacedOrder({ quantity: values.quantity, total: product.price * values.quantity });
+      setPlacedOrder({
+        quantity: values.quantity,
+        total: finalUnitPrice * values.quantity,
+        optionNames: values.optionNames,
+      });
     } catch (error) {
       console.error(error);
       toast.error("주문 접수에 실패했습니다. 잠시 후 다시 시도해주세요.");
@@ -103,6 +129,12 @@ export function OrderDialog({ product, trigger }: { product: Product; trigger: R
                 <span className="text-muted-foreground">상품</span>
                 <span className="font-medium">{product.name}</span>
               </div>
+              {placedOrder.optionNames.length > 0 ? (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">옵션</span>
+                  <span className="font-medium">{placedOrder.optionNames.join(", ")}</span>
+                </div>
+              ) : null}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">수량</span>
                 <span className="font-medium">{placedOrder.quantity}개</span>
@@ -137,6 +169,47 @@ export function OrderDialog({ product, trigger }: { product: Product; trigger: R
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                {product.options.length > 0 ? (
+                  <FormField
+                    control={form.control}
+                    name="optionNames"
+                    render={() => (
+                      <FormItem>
+                        <FormLabel>추가 옵션</FormLabel>
+                        <div className="space-y-2 border border-hairline p-3">
+                          {product.options.map((o) => (
+                            <label
+                              key={o.name}
+                              className="flex cursor-pointer items-center justify-between text-sm"
+                            >
+                              <span className="flex items-center gap-2">
+                                <Checkbox
+                                  checked={selectedOptionNames.includes(o.name)}
+                                  onCheckedChange={(checked) => {
+                                    const current = form.getValues("optionNames");
+                                    form.setValue(
+                                      "optionNames",
+                                      checked
+                                        ? [...current, o.name]
+                                        : current.filter((n) => n !== o.name),
+                                    );
+                                  }}
+                                />
+                                {o.name}
+                              </span>
+                              {o.extra_price ? (
+                                <span className="text-muted-foreground">
+                                  +{o.extra_price.toLocaleString()}원
+                                </span>
+                              ) : null}
+                            </label>
+                          ))}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ) : null}
                 <FormField
                   control={form.control}
                   name="buyerName"
@@ -176,6 +249,14 @@ export function OrderDialog({ product, trigger }: { product: Product; trigger: R
                     </FormItem>
                   )}
                 />
+                <div className="hairline-t flex items-center justify-between pt-3 text-sm">
+                  <span className="text-muted-foreground">
+                    {product.shipping_note ?? "배송비 안내 없음"}
+                  </span>
+                  <span className="font-bold">
+                    총 금액 ₩{liveTotal.toLocaleString()}
+                  </span>
+                </div>
                 <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
                   {form.formState.isSubmitting ? "처리 중..." : "주문 접수하기"}
                 </Button>
