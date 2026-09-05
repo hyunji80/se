@@ -228,8 +228,12 @@ function Index() {
 
   const bestSellers = (products ?? []).filter((p) => p.is_best);
   const categoryCounts = new Map<string, number>();
+  const productsByCategory = new Map<string, Product[]>();
   for (const p of products ?? []) {
     categoryCounts.set(p.category, (categoryCounts.get(p.category) ?? 0) + 1);
+    const arr = productsByCategory.get(p.category) ?? [];
+    if (arr.length < 5) arr.push(p);
+    productsByCategory.set(p.category, arr);
   }
   const displayedProducts = selectedCategory
     ? (products ?? []).filter((p) => p.category === selectedCategory)
@@ -361,102 +365,81 @@ function Index() {
                 <p className="text-[10px] font-semibold uppercase tracking-[0.4em] text-background/70">
                   The Filled Space
                 </p>
-                <h1 className="font-display mt-8 text-4xl font-bold leading-[1.4] tracking-tight sm:text-6xl">
-                  공간을 채우는
-                  <br />
-                  모든 것
+                <h1 className="font-display mt-8 text-4xl font-bold tracking-tight sm:text-6xl">
+                  공간을 채우는 모든 것
                 </h1>
-                <p className="mx-auto mt-8 max-w-lg text-[13px] leading-loose text-background/80">
-                  스위치와 콘센트부터 위생 장갑, 청소·사무·포장 용품까지.
-                  비어 있는 자리를 채우는 일상의 모든 소모품.
+                <p className="mx-auto mt-8 max-w-xl text-[13px] leading-loose text-background/80">
+                  스위치와 콘센트부터 위생·청소·사무·포장 용품까지, 일상의 모든 소모품.
                 </p>
                 <div className="mt-12 flex items-center justify-center gap-5">
                   <a
-                    href="#best"
-                    className="border border-background/80 px-10 py-4 text-[11px] font-semibold tracking-[0.24em] text-background transition-colors hover:bg-background hover:text-foreground"
+                    href="#all-products"
+                    className="border border-background/80 px-10 py-4 text-[14px] font-semibold tracking-[0.24em] text-background transition-colors hover:bg-background hover:text-foreground"
                   >베스트 상품 보기</a>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Stat strip */}
-          <div className="hairline-b">
-            <div className="mx-auto grid max-w-[1400px] grid-cols-3 px-6 sm:px-8">
-              {[
-                { v: "2,400+", l: "동시 재고 품목" },
-                { v: "8", l: "전문 카테고리" },
-                { v: "24h", l: "이내 출고" },
-              ].map((s, i) => (
-                <div
-                  key={s.l}
-                  className={`py-10 text-center ${i > 0 ? "border-l border-hairline" : ""}`}
-                >
-                  <p className="font-display text-3xl font-bold sm:text-[32px]">{s.v}</p>
-                  <p className="mt-2.5 text-[10px] tracking-[0.18em] text-muted-foreground">{s.l}</p>
-                </div>
-              ))}
-            </div>
-          </div>
         </section>
 
         {/* 카테고리 */}
         <section id="categories" className="mx-auto max-w-[1400px] px-6 py-28 sm:px-8">
           <SectionHead label="Departments" title="카테고리별 쇼핑" />
-          <div className="mt-10 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
-            {categories.map((cat) => (
-              <button
-                key={cat.name}
-                type="button"
-                onClick={() => goToCategory(cat.name)}
-                className="image-zoom group block text-left"
-              >
-                <div className="aspect-[4/5] w-full overflow-hidden bg-paper">
-                  <img
-                    src={cat.image}
-                    alt={cat.alt}
-                    loading="lazy"
-                    width={640}
-                    height={800}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                <div className="hairline-b mt-5 flex items-start justify-between pb-4">
-                  <div>
-                    <p className="text-[10px] font-semibold tracking-label text-accent">
-                      {cat.no}
+          <div className="mt-10 grid gap-x-6 gap-y-14 sm:grid-cols-2 lg:grid-cols-4">
+            {categories.map((cat) => {
+              const items = productsByCategory.get(cat.name) ?? [];
+              return (
+                <div key={cat.name} className="flex flex-col">
+                  <button
+                    type="button"
+                    onClick={() => goToCategory(cat.name)}
+                    className="image-zoom group block text-left"
+                  >
+                    <div className="aspect-[8/5] w-full overflow-hidden bg-paper">
+                      <img
+                        src={cat.image}
+                        alt={cat.alt}
+                        loading="lazy"
+                        width={640}
+                        height={400}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <div className="hairline-b mt-5 flex items-start justify-between pb-4">
+                      <div>
+                        <p className="text-[11px] font-semibold tracking-label text-accent">
+                          {cat.no}
+                        </p>
+                        <h3 className="font-display mt-2 text-xl font-bold">{cat.name}</h3>
+                        <p className="mt-2 text-[15px] text-muted-foreground">{cat.desc}</p>
+                      </div>
+                      <ArrowUpRight
+                        className="mt-1 size-5 text-muted-foreground transition-transform duration-500 group-hover:-translate-y-1 group-hover:translate-x-1 group-hover:text-foreground"
+                        strokeWidth={1.25}
+                      />
+                    </div>
+                    <p className="mt-3 text-[13px] font-semibold tracking-wide text-foreground/70">
+                      {categoryCounts.get(cat.name) ?? 0} 품목
                     </p>
-                    <h3 className="font-display mt-2 text-lg font-bold">{cat.name}</h3>
-                    <p className="mt-1.5 text-[13px] text-muted-foreground">{cat.desc}</p>
-                  </div>
-                  <ArrowUpRight
-                    className="mt-1 size-4 text-muted-foreground transition-transform duration-500 group-hover:-translate-y-1 group-hover:translate-x-1 group-hover:text-foreground"
-                    strokeWidth={1.25}
-                  />
-                </div>
-                <p className="mt-3 text-[11px] tracking-wide text-muted-foreground">
-                  {categoryCounts.get(cat.name) ?? 0} 품목
-                </p>
-              </button>
-            ))}
-          </div>
-        </section>
+                  </button>
 
-        {/* 베스트 */}
-        <section id="best" className="bg-paper">
-          <div className="mx-auto max-w-[1400px] px-6 py-28 sm:px-8">
-            <SectionHead label="This Week" title="이번 주 베스트" more="베스트 전체" />
-            {bestSellers.length === 0 ? (
-              <p className="mt-10 text-sm text-muted-foreground">
-                등록된 베스트 상품이 없습니다.
-              </p>
-            ) : (
-              <div className="mt-10 grid grid-cols-2 gap-x-6 gap-y-12 lg:grid-cols-4">
-                {bestSellers.map((item) => (
-                  <ProductCard key={item.id} item={item} onAddToCart={handleAddToCart} />
-                ))}
-              </div>
-            )}
+                  <ul className="mt-4 space-y-1">
+                    {items.map((p) => (
+                      <li key={p.id}>
+                        <Link
+                          to="/product/$id"
+                          params={{ id: p.id }}
+                          className="link-underline block py-1 text-[14px] text-foreground/80 transition-colors hover:text-accent"
+                        >
+                          {p.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
           </div>
         </section>
 
